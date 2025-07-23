@@ -40,8 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final email = _emailController.text.trim();
 
       final existingKey = await SecureStorage.read('private_key_$email');
+      final existingEncryptedKey = await SecureStorage.read('encrypted_private_key_$email');
 
-      if (existingKey != null) {
+      if (existingKey != null || existingEncryptedKey != null) {
+        await SecureStorage.delete('encrypted_private_key_$email');
         // 🔐 Ключ уже есть — переходим сразу к чатам
         Navigator.pushReplacement(
           context,

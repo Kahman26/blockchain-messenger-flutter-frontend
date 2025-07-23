@@ -44,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         EncryptPrivateKeyArgs(keys['private_key']!, mnemonic),
       );
 
-      await SecureStorage.write('private_key_$email', encryptedPrivateKey);
+      await SecureStorage.write('encrypted_private_key_$email', encryptedPrivateKey);
       await SecureStorage.write('mnemonic_$email', mnemonic);
       await SecureStorage.write('current_email', email);
 
@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final worker = KeyGenWorker(onKeysAndEncryptedReady: (keys) async {
       final email = _emailController.text.trim();
 
-      await SecureStorage.write('private_key_$email', keys['encrypted']!);
+      await SecureStorage.write('encrypted_private_key_$email', keys['encrypted']!);
       await SecureStorage.write('mnemonic_$email', keys['mnemonic']!);
       await SecureStorage.write('current_email', email);
 

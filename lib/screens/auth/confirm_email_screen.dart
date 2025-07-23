@@ -41,7 +41,7 @@ class _ConfirmEmailScreenState extends State<ConfirmEmailScreen> {
     if (success) {
       final email = widget.email;
       final mnemonic = await SecureStorage.read('mnemonic_$email');
-      final encryptedKey = await SecureStorage.read('private_key_$email');
+      final encryptedKey = await SecureStorage.read('encrypted_private_key_$email');
 
       if (mnemonic == null || encryptedKey == null) {
         setState(() => _error = 'Ошибка: не найден ключ или мнемоника');

@@ -101,9 +101,26 @@ class _MnemonicRestoreScreenState extends State<MnemonicRestoreScreen> {
         throw Exception("Неверная мнемоника или повреждённый ключ");
       }
 
-      await _storage.write(key: 'private_key', value: pem);
+      await _storage.write(key: 'private_key_${widget.email}', value: pem);
+
+      final jwt = await _storage.read(key: 'jwt_not_confirmed');
+      await _storage.write(key: 'jwt', value: jwt);
+
+      await _storage.delete(key: 'encrypted_private_key_${widget.email}');
+      await _storage.delete(key: 'jwt_not_confirmed');
+      
+      // Ниже Debug
+      final currentEmail = await _storage.read(key: 'current_email');
+      final privKeyPem = await _storage.read(key: 'private_key_$currentEmail');
+      final userId = int.tryParse(await _storage.read(key: 'user_id') ?? '0') ?? 0;
+
+      debugPrint('🔍 jwt: $jwt');
+      debugPrint('🔍 current_email: $currentEmail');
+      debugPrint('🔍 private_key_$currentEmail: $privKeyPem');
+      debugPrint('🔍 user_id: $userId');
 
       debugPrint('🔐 Приватный ключ:, $pem');
+      // Выше Debug
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const ChatListScreen()),

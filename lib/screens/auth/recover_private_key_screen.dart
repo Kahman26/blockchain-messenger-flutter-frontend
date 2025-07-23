@@ -26,7 +26,7 @@ class _RecoverPrivateKeyScreenState extends State<RecoverPrivateKeyScreen> {
     final mnemonic = _controller.text.trim();
 
     try {
-        final encrypted = await SecureStorage.read('private_key_${widget.email}');
+        final encrypted = await SecureStorage.read('encrypted_private_key_${widget.email}');
 
         if (encrypted == null) {
             setState(() {

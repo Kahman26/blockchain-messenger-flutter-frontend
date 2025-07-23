@@ -23,6 +23,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       await SecureStorage.delete('user_id');
       await SecureStorage.delete('current_email');
       await SecureStorage.delete('private_key_$email');
+      await SecureStorage.delete('encrypted_private_key_$email');
+      await SecureStorage.delete('mnemonic_$email');
     }
 
     if (!mounted) return;

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 
 class AuthService {
@@ -22,10 +23,13 @@ class AuthService {
       );
 
       final token = response.data['access_token'];
-      final userId = response.data['user_id']; // если сервер это возвращает
+      final userId = response.data['user_id']; 
+
+      debugPrint(token);
+      debugPrint(userId.toString());
 
       if (token != null) {
-        await _storage.write(key: 'jwt', value: token);
+        await _storage.write(key: 'jwt_not_confirmed', value: token);
         await _storage.write(key: 'current_email', value: email);
         if (userId != null) {
           await _storage.write(key: 'user_id', value: userId.toString());
