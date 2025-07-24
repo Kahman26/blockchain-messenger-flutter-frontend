@@ -43,7 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final existingEncryptedKey = await SecureStorage.read('encrypted_private_key_$email');
 
       if (existingKey != null || existingEncryptedKey != null) {
+        final jwt = await SecureStorage.read('jwt_not_confirmed');
+        await SecureStorage.write('jwt', jwt);
+
         await SecureStorage.delete('encrypted_private_key_$email');
+        await SecureStorage.delete('jwt_not_confirmed');
         // 🔐 Ключ уже есть — переходим сразу к чатам
         Navigator.pushReplacement(
           context,

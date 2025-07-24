@@ -90,13 +90,18 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 title: Text(title),
                 subtitle: Text('Тип: $type'),
                 trailing: Text(formattedTime),
-                onTap: () {
+                onTap: () async {
+                  final members = await _chatService.fetchChatMembers(chat['chat_id']);
+
+                  if (!context.mounted) return;
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(
                         chatId: chat['chat_id'],
                         chatName: chat['chat_name'] ?? 'Чат',
+                        members: members,
                       ),
                     ),
                   );

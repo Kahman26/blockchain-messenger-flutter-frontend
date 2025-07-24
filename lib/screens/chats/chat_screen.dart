@@ -1,176 +1,196 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:pointycastle/asymmetric/api.dart';
-import 'package:pointycastle/export.dart' hide State, Padding;
-import 'package:http/http.dart' as http;
-import 'package:basic_utils/basic_utils.dart';
+import '../../services/chat_service.dart';
+import '../../utils/crypto_utils.dart';
 
 class ChatScreen extends StatefulWidget {
   final int chatId;
   final String chatName;
+  final List<Map<String, dynamic>> members; // [{id, publicKey, username}]
 
-  const ChatScreen({super.key, required this.chatId, required this.chatName});
+  const ChatScreen({
+    super.key,
+    required this.chatId,
+    required this.chatName,
+    required this.members,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _messageController = TextEditingController();
-  final _storage = FlutterSecureStorage(
-    webOptions: WebOptions(),
-  );
+  final _controller = TextEditingController();
+  final _scrollController = ScrollController();
+  final _storage = const FlutterSecureStorage();
+  final _chatService = ChatService();
 
+  List<_Message> _messages = [];
+  String? _currentUserEmail;
+  int? _currentUserId;
+  String? _privateKey;
 
-  Future<void> _sendMessage() async {
-    final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+  bool _loading = true;
 
-    final jwt = await _storage.read(key: 'jwt');
-    final currentEmail = await _storage.read(key: 'current_email');
-    final privKeyPem = await _storage.read(key: 'private_key_$currentEmail');
-    final userId = int.tryParse(await _storage.read(key: 'user_id') ?? '0') ?? 0;
-
-    debugPrint('🔍 jwt: $jwt');
-    debugPrint('🔍 current_email: $currentEmail');
-    debugPrint('🔍 private_key_$currentEmail: $privKeyPem');
-    debugPrint('🔍 user_id: $userId');
-
-    final allKeys = await _storage.readAll();
-    debugPrint('All keys in storage: ${allKeys.keys}');
-
-    debugPrint('🔍 Проверка хранилища:');
-    final allValues = await _storage.readAll();
-    allValues.forEach((key, value) {
-    debugPrint('$key: $value');
-    });
-
-    if (jwt == null) {
-    debugPrint('🚫 JWT не найден');
-    }
-    if (privKeyPem == null) {
-    debugPrint('🚫 Приватный ключ не найден для private_key_$currentEmail');
-    }
-    if (userId == 0) {
-    debugPrint('🚫 user_id не найден или равен 0');
-    }
-
-    if (jwt == null || privKeyPem == null || currentEmail == null || userId == 0) {
-    print("🚫 Не найдены токен, email или приватный ключ");
-    return;
-    }
-
-
-    try {
-      // 1. Получаем участников чата с публичными ключами
-      final response = await http.get(
-        Uri.parse('http://80.93.60.56:8000/chats/${widget.chatId}'),
-        headers: {'Authorization': 'Bearer $jwt'},
-      );
-      if (response.statusCode != 200) {
-        print('Ошибка получения участников');
-        return;
-      }
-      final data = jsonDecode(response.body);
-      final List receivers = data['members'];
-
-      // 2. Подписываем сообщение приватным ключом
-      final signature = await _signMessage(message, privKeyPem);
-
-      // 3. Шифруем сообщение для каждого участника
-      final List payload = [];
-      for (var receiver in receivers) {
-        final receiverId = receiver['user_id'];
-        final receiverPubKeyPem = receiver['public_key'];
-        if (receiverPubKeyPem == null) continue;
-
-        final encrypted = await _encryptMessage(message, receiverPubKeyPem);
-        payload.add({
-          "receiver_id": receiverId,
-          "encrypted_message": encrypted,
-          "signature": signature,
-        });
-      }
-
-      // 4. Отправляем на бэкенд
-      final sendRes = await http.post(
-        Uri.parse('http://80.93.60.56:8000/chats/${widget.chatId}/send'),
-        headers: {
-          'Authorization': 'Bearer $jwt',
-          'Content-Type': 'application/json'
-        },
-        body: jsonEncode(payload),
-      );
-
-      if (sendRes.statusCode == 200) {
-        print("✅ Сообщение отправлено");
-        _messageController.clear();
-      } else {
-        print("❌ Ошибка отправки: ${sendRes.body}");
-      }
-    } catch (e) {
-      print("⚠️ Ошибка при отправке: $e");
-    }
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
   }
 
-  Future<String> _encryptMessage(String message, String pubPem) async {
-    final publicKey = CryptoUtils.rsaPublicKeyFromPem(pubPem);
+  Future<void> _initialize() async {
+    final email = await _storage.read(key: 'current_email');
+    final privKey = await _storage.read(key: 'private_key_$email');
+    final userId = int.tryParse(await _storage.read(key: 'user_id') ?? '');
 
-    final encryptor = OAEPEncoding(RSAEngine())
-        ..init(
-        true,
-        PublicKeyParameter<RSAPublicKey>(publicKey),
-        );
-
-    final input = Uint8List.fromList(utf8.encode(message));
-    final output = encryptor.process(input);
-
-    return base64Encode(output);
+    if (email == null || privKey == null || userId == null) {
+      setState(() => _loading = false);
+      return;
     }
 
-  Future<String> _signMessage(String message, String privPem) async {
-    final privateKey = CryptoUtils.rsaPrivateKeyFromPem(privPem);
+    final messages = await _chatService.fetchMessages(widget.chatId);
+    final decryptedMessages = await _decryptMessages(messages, privKey);
 
-    final signer = Signer('SHA-256/RSA');
-    final privParams = PrivateKeyParameter<RSAPrivateKey>(privateKey);
-    signer.init(true, privParams);
+    setState(() {
+      _currentUserEmail = email;
+      _currentUserId = userId;
+      _privateKey = privKey;
+      _messages = decryptedMessages;
+      _loading = false;
+    });
 
-    final sig = signer.generateSignature(Uint8List.fromList(utf8.encode(message)));
-    return base64Encode((sig as RSASignature).bytes);
-    }
+    await Future.delayed(const Duration(milliseconds: 100));
+    _scrollToBottom();
+  }
+
+  Future<List<_Message>> _decryptMessages(List<Map<String, dynamic>> raw, String privKey) async {
+    return raw.map((msg) {
+      String decrypted;
+      try {
+        decrypted = CryptoUtilsService.decryptMessage(msg['encrypted_data'], privKey);
+      } catch (_) {
+        decrypted = '[🔒 Не удалось расшифровать]';
+      }
+      return _Message(
+        fromUserId: msg['from_user_id'],
+        content: decrypted,
+        timestamp: DateTime.parse(msg['timestamp']),
+      );
+    }).toList();
+  }
+
+
+  Future<void> _handleSend() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _privateKey == null) return;
+
+    final others = widget.members.where((u) => u['id'] != _currentUserId).toList();
+
+    await _chatService.sendMessage(
+      chatId: widget.chatId,
+      message: text,
+      receivers: widget.members, // ВСЕ, включая себя
+    );
+
+    setState(() {
+      _messages.add(_Message(
+        fromUserId: _currentUserId!,
+        content: text,
+        timestamp: DateTime.now(),
+      ));
+      _controller.clear();
+    });
+
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final me = _currentUserId;
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.chatName)),
-      body: Column(
-        children: [
-          const Expanded(child: Center(child: Text('🔐 История чата (скоро)'))),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Введите сообщение...',
-                      border: OutlineInputBorder(),
-                    ),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index];
+                      final isMe = msg.fromUserId == me;
+                      final align = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+                      final bubbleColor = isMe ? Colors.blue[100] : Colors.grey[300];
+                      final time = DateFormat('HH:mm').format(msg.timestamp);
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: Column(
+                          crossAxisAlignment: align,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: bubbleColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(msg.content),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              time,
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                )
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          decoration: const InputDecoration(
+                            hintText: 'Введите сообщение...',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _handleSend,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
+}
+
+class _Message {
+  final int fromUserId;
+  final String content;
+  final DateTime timestamp;
+
+  _Message({
+    required this.fromUserId,
+    required this.content,
+    required this.timestamp,
+  });
 }
