@@ -91,3 +91,38 @@ class DecryptWorker {
     });
   }
 }
+
+
+class MessageDecryptWorker {
+  final List<Map<String, dynamic>> rawMessages;
+  final String privateKey;
+  final void Function(List<Map<String, dynamic>> result) onDecrypted;
+
+  late Worker _worker;
+
+  MessageDecryptWorker({
+    required this.rawMessages,
+    required this.privateKey,
+    required this.onDecrypted,
+  }) {
+    _worker = Worker('workers/key_worker.js');
+
+    _worker.onMessage.listen((event) {
+      final decoded = jsonDecode(event.data);
+      if (decoded is Map && decoded['cmd'] == 'decrypted_messages') {
+        _worker.terminate();
+        final List<dynamic> result = decoded['messages'];
+        onDecrypted(List<Map<String, dynamic>>.from(result));
+      }
+    });
+  }
+
+  void decrypt() {
+    _worker.postMessage({
+      'cmd': 'decrypt_messages',
+      'messages': jsonEncode(rawMessages),
+      'private_key': privateKey,
+    });
+  }
+}
+

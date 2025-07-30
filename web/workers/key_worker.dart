@@ -77,7 +77,40 @@ void main() {
         }));
       }
     }
-    // Неизвестная команда
+
+    else if (message is Map && message['cmd'] == 'decrypt_messages') {
+      final encryptedMessagesJson = message['messages'];
+      final privateKeyPem = message['private_key'];
+
+      final List<dynamic> rawMessages = jsonDecode(encryptedMessagesJson);
+
+      final result = rawMessages.map((msg) {
+        try {
+          final decrypted = _decryptMessage(
+            msg['encrypted_data'],
+            privateKeyPem,
+          );
+
+          return {
+            'from_user_id': msg['from_user_id'],
+            'content': decrypted,
+            'timestamp': msg['timestamp'],
+          };
+        } catch (_) {
+          return {
+            'from_user_id': msg['from_user_id'],
+            'content': '[🔒 Не удалось расшифровать]',
+            'timestamp': msg['timestamp'],
+          };
+        }
+      }).toList();
+
+      self.postMessage(jsonEncode({
+        'cmd': 'decrypted_messages',
+        'messages': result,
+      }));
+    }
+
     else {
       self.postMessage('Unknown command: $message');
     }
@@ -90,4 +123,16 @@ Uint8List _deriveKeyFromPassphrase(String passphrase, {int iterations = 100000})
   final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
   pbkdf2.init(Pbkdf2Parameters(Uint8List.fromList(salt), iterations, 32));
   return pbkdf2.process(utf8.encode(passphrase) as Uint8List);
+}
+
+
+String _decryptMessage(String base64Message, String privateKeyPem) {
+  final RSAPrivateKey privateKey = CryptoUtils.rsaPrivateKeyFromPem(privateKeyPem);
+
+  final cipher = RSAEngine()
+    ..init(false, PrivateKeyParameter<RSAPrivateKey>(privateKey));
+
+  final Uint8List encryptedBytes = base64Decode(base64Message);
+  final Uint8List decrypted = cipher.process(encryptedBytes);
+  return utf8.decode(decrypted);
 }

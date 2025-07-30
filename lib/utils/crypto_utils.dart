@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 
 import 'key_utils.dart';
+import '../screens/chats/chat_screen.dart';
 
 class CryptoUtilsService {
   /// Генерация пары ключей
@@ -90,3 +91,29 @@ class CryptoUtilsService {
   }
 
 }
+
+
+class DecryptMessagesArgs {
+  final List<Map<String, dynamic>> rawMessages;
+  final String privateKey;
+
+  DecryptMessagesArgs(this.rawMessages, this.privateKey);
+}
+
+List<Message> decryptMessagesSync(DecryptMessagesArgs args) {
+  return args.rawMessages.map((msg) {
+    String decrypted;
+    try {
+      decrypted = CryptoUtilsService.decryptMessage(msg['encrypted_data'], args.privateKey);
+    } catch (_) {
+      decrypted = '[🔒 Не удалось расшифровать]';
+    }
+    return Message(
+      fromUserId: msg['from_user_id'],
+      content: decrypted,
+      timestamp: DateTime.parse(msg['timestamp']),
+    );
+  }).toList();
+}
+
+

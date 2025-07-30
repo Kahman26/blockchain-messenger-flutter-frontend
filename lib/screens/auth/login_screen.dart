@@ -44,7 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (existingKey != null || existingEncryptedKey != null) {
         final jwt = await SecureStorage.read('jwt_not_confirmed');
-        await SecureStorage.write('jwt', jwt);
+        
+        if (jwt != null) {
+          await SecureStorage.write('jwt', jwt);
+        }
 
         await SecureStorage.delete('encrypted_private_key_$email');
         await SecureStorage.delete('jwt_not_confirmed');

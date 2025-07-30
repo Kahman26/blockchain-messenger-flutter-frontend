@@ -290,6 +290,67 @@
       t1.$flags = 1;
       return t1;
     },
+    JSString__isWhitespace(codeUnit) {
+      if (codeUnit < 256)
+        switch (codeUnit) {
+          case 9:
+          case 10:
+          case 11:
+          case 12:
+          case 13:
+          case 32:
+          case 133:
+          case 160:
+            return true;
+          default:
+            return false;
+        }
+      switch (codeUnit) {
+        case 5760:
+        case 8192:
+        case 8193:
+        case 8194:
+        case 8195:
+        case 8196:
+        case 8197:
+        case 8198:
+        case 8199:
+        case 8200:
+        case 8201:
+        case 8202:
+        case 8232:
+        case 8233:
+        case 8239:
+        case 8287:
+        case 12288:
+        case 65279:
+          return true;
+        default:
+          return false;
+      }
+    },
+    JSString__skipLeadingWhitespace(string, index) {
+      var t1, codeUnit;
+      for (t1 = string.length; index < t1;) {
+        codeUnit = string.charCodeAt(index);
+        if (codeUnit !== 32 && codeUnit !== 13 && !J.JSString__isWhitespace(codeUnit))
+          break;
+        ++index;
+      }
+      return index;
+    },
+    JSString__skipTrailingWhitespace(string, index) {
+      var t1, index0, codeUnit;
+      for (t1 = string.length; index > 0; index = index0) {
+        index0 = index - 1;
+        if (!(index0 < t1))
+          return A.ioore(string, index0);
+        codeUnit = string.charCodeAt(index0);
+        if (codeUnit !== 32 && codeUnit !== 13 && !J.JSString__isWhitespace(codeUnit))
+          break;
+      }
+      return index;
+    },
     getInterceptor$(receiver) {
       if (typeof receiver == "number") {
         if (Math.floor(receiver) == receiver)
@@ -355,6 +416,15 @@
         return receiver;
       return J.getNativeInterceptor(receiver);
     },
+    getInterceptor$s(receiver) {
+      if (typeof receiver == "string")
+        return J.JSString.prototype;
+      if (receiver == null)
+        return receiver;
+      if (!(receiver instanceof A.Object))
+        return J.UnknownJavaScriptObject.prototype;
+      return receiver;
+    },
     getInterceptor$x(receiver) {
       if (receiver == null)
         return receiver;
@@ -403,6 +473,9 @@
     $indexSet$ax(receiver, a0, a1) {
       return J.getInterceptor$ax(receiver).$indexSet(receiver, a0, a1);
     },
+    addAll$1$ax(receiver, a0) {
+      return J.getInterceptor$ax(receiver).addAll$1(receiver, a0);
+    },
     asByteData$0$x(receiver) {
       return J.getInterceptor$x(receiver).asByteData$0(receiver);
     },
@@ -427,8 +500,17 @@
     forEach$1$x(receiver, a0) {
       return J.getInterceptor$x(receiver).forEach$1(receiver, a0);
     },
+    map$1$1$ax(receiver, a0, $T1) {
+      return J.getInterceptor$ax(receiver).map$1$1(receiver, a0, $T1);
+    },
     skip$1$ax(receiver, a0) {
       return J.getInterceptor$ax(receiver).skip$1(receiver, a0);
+    },
+    startsWith$1$s(receiver, a0) {
+      return J.getInterceptor$s(receiver).startsWith$1(receiver, a0);
+    },
+    take$1$ax(receiver, a0) {
+      return J.getInterceptor$ax(receiver).take$1(receiver, a0);
     },
     toString$0$(receiver) {
       return J.getInterceptor$(receiver).toString$0(receiver);
@@ -510,6 +592,11 @@
       }
       return new A.SubListIterable(_iterable, _start, _endOrLength, $E._eval$1("SubListIterable<0>"));
     },
+    MappedIterable_MappedIterable(iterable, $function, $S, $T) {
+      if (type$.EfficientLengthIterable_dynamic._is(iterable))
+        return new A.EfficientLengthMappedIterable(iterable, $function, $S._eval$1("@<0>")._bind$1($T)._eval$1("EfficientLengthMappedIterable<1,2>"));
+      return new A.MappedIterable(iterable, $function, $S._eval$1("@<0>")._bind$1($T)._eval$1("MappedIterable<1,2>"));
+    },
     IterableElementError_noElement() {
       return new A.StateError("No element");
     },
@@ -522,6 +609,9 @@
     },
     LateError: function LateError(t0) {
       this._message = t0;
+    },
+    CodeUnits: function CodeUnits(t0) {
+      this.__internal$_string = t0;
     },
     SentinelValue: function SentinelValue() {
     },
@@ -544,8 +634,35 @@
       _.__internal$_current = null;
       _.$ti = t2;
     },
+    MappedIterable: function MappedIterable(t0, t1, t2) {
+      this.__internal$_iterable = t0;
+      this._f = t1;
+      this.$ti = t2;
+    },
+    EfficientLengthMappedIterable: function EfficientLengthMappedIterable(t0, t1, t2) {
+      this.__internal$_iterable = t0;
+      this._f = t1;
+      this.$ti = t2;
+    },
+    MappedIterator: function MappedIterator(t0, t1, t2) {
+      var _ = this;
+      _.__internal$_current = null;
+      _._iterator = t0;
+      _._f = t1;
+      _.$ti = t2;
+    },
     MappedListIterable: function MappedListIterable(t0, t1, t2) {
       this._source = t0;
+      this._f = t1;
+      this.$ti = t2;
+    },
+    WhereIterable: function WhereIterable(t0, t1, t2) {
+      this.__internal$_iterable = t0;
+      this._f = t1;
+      this.$ti = t2;
+    },
+    WhereIterator: function WhereIterator(t0, t1, t2) {
+      this._iterator = t0;
       this._f = t1;
       this.$ti = t2;
     },
@@ -556,6 +673,10 @@
       this.$ti = t0;
     },
     FixedLengthListMixin: function FixedLengthListMixin() {
+    },
+    UnmodifiableListMixin: function UnmodifiableListMixin() {
+    },
+    UnmodifiableListBase: function UnmodifiableListBase() {
     },
     ReversedListIterable: function ReversedListIterable(t0, t1) {
       this._source = t0;
@@ -662,6 +783,48 @@
         return object.toString$0(0);
       return "Instance of '" + A.Primitives_objectTypeName(object) + "'";
     },
+    Primitives__fromCharCodeApply(array) {
+      var result, i, i0, chunkEnd,
+        end = array.length;
+      if (end <= 500)
+        return String.fromCharCode.apply(null, array);
+      for (result = "", i = 0; i < end; i = i0) {
+        i0 = i + 500;
+        chunkEnd = i0 < end ? i0 : end;
+        result += String.fromCharCode.apply(null, array.slice(i, chunkEnd));
+      }
+      return result;
+    },
+    Primitives_stringFromCodePoints(codePoints) {
+      var t1, _i, i,
+        a = A._setArrayType([], type$.JSArray_int);
+      for (t1 = codePoints.length, _i = 0; _i < codePoints.length; codePoints.length === t1 || (0, A.throwConcurrentModificationError)(codePoints), ++_i) {
+        i = codePoints[_i];
+        if (!A._isInt(i))
+          throw A.wrapException(A.argumentErrorValue(i));
+        if (i <= 65535)
+          B.JSArray_methods.add$1(a, i);
+        else if (i <= 1114111) {
+          B.JSArray_methods.add$1(a, 55296 + (B.JSInt_methods._shrOtherPositive$1(i - 65536, 10) & 1023));
+          B.JSArray_methods.add$1(a, 56320 + (i & 1023));
+        } else
+          throw A.wrapException(A.argumentErrorValue(i));
+      }
+      return A.Primitives__fromCharCodeApply(a);
+    },
+    Primitives_stringFromCharCodes(charCodes) {
+      var t1, _i, i;
+      for (t1 = charCodes.length, _i = 0; _i < t1; ++_i) {
+        i = charCodes[_i];
+        if (!A._isInt(i))
+          throw A.wrapException(A.argumentErrorValue(i));
+        if (i < 0)
+          throw A.wrapException(A.argumentErrorValue(i));
+        if (i > 65535)
+          return A.Primitives_stringFromCodePoints(charCodes);
+      }
+      return A.Primitives__fromCharCodeApply(charCodes);
+    },
     Primitives_stringFromNativeUint8List(charCodes, start, end) {
       var i, result, i0, chunkEnd;
       if (end <= 500 && start === 0 && end === charCodes.length)
@@ -683,38 +846,50 @@
       }
       throw A.wrapException(A.RangeError$range(charCode, 0, 1114111, null, null));
     },
+    Primitives_valueFromDecomposedDate(years, month, day, hours, minutes, seconds, milliseconds, microseconds, isUtc) {
+      var remainder, value, t1,
+        jsMonth = month - 1;
+      if (0 <= years && years < 100) {
+        years += 400;
+        jsMonth -= 4800;
+      }
+      remainder = B.JSInt_methods.$mod(microseconds, 1000);
+      milliseconds += B.JSInt_methods._tdivFast$1(microseconds - remainder, 1000);
+      value = isUtc ? Date.UTC(years, jsMonth, day, hours, minutes, seconds, milliseconds) : new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf();
+      t1 = true;
+      if (!isNaN(value))
+        if (!(value < -864e13))
+          if (!(value > 864e13))
+            t1 = value === 864e13 && remainder !== 0;
+      if (t1)
+        return null;
+      return value;
+    },
     Primitives_lazyAsJsDate(receiver) {
       if (receiver.date === void 0)
         receiver.date = new Date(receiver._core$_value);
       return receiver.date;
     },
     Primitives_getYear(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCFullYear() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCFullYear() + 0 : A.Primitives_lazyAsJsDate(receiver).getFullYear() + 0;
     },
     Primitives_getMonth(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCMonth() + 1;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCMonth() + 1 : A.Primitives_lazyAsJsDate(receiver).getMonth() + 1;
     },
     Primitives_getDay(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCDate() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCDate() + 0 : A.Primitives_lazyAsJsDate(receiver).getDate() + 0;
     },
     Primitives_getHours(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCHours() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCHours() + 0 : A.Primitives_lazyAsJsDate(receiver).getHours() + 0;
     },
     Primitives_getMinutes(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCMinutes() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCMinutes() + 0 : A.Primitives_lazyAsJsDate(receiver).getMinutes() + 0;
     },
     Primitives_getSeconds(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCSeconds() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCSeconds() + 0 : A.Primitives_lazyAsJsDate(receiver).getSeconds() + 0;
     },
     Primitives_getMilliseconds(receiver) {
-      var t1 = A.Primitives_lazyAsJsDate(receiver).getUTCMilliseconds() + 0;
-      return t1;
+      return receiver.isUtc ? A.Primitives_lazyAsJsDate(receiver).getUTCMilliseconds() + 0 : A.Primitives_lazyAsJsDate(receiver).getMilliseconds() + 0;
     },
     Primitives_extractStackTrace(error) {
       var jsError = error.$thrownJsError;
@@ -1516,9 +1691,10 @@
       this.prototypeForTag = t0;
     },
     JSSyntaxRegExp: function JSSyntaxRegExp(t0, t1) {
-      this.pattern = t0;
-      this._nativeRegExp = t1;
-      this._nativeGlobalRegExp = null;
+      var _ = this;
+      _.pattern = t0;
+      _._nativeRegExp = t1;
+      _._nativeAnchoredRegExp = _._nativeGlobalRegExp = null;
     },
     _MatchImplementation: function _MatchImplementation(t0) {
       this._match = t0;
@@ -3530,6 +3706,30 @@
     },
     _SetBase: function _SetBase() {
     },
+    _parseJson(source, reviver) {
+      var e, exception, t1, parsed = null;
+      try {
+        parsed = JSON.parse(source);
+      } catch (exception) {
+        e = A.unwrapException(exception);
+        t1 = A.FormatException$(String(e), null, null);
+        throw A.wrapException(t1);
+      }
+      t1 = A._convertJsonToDartLazy(parsed);
+      return t1;
+    },
+    _convertJsonToDartLazy(object) {
+      var i;
+      if (object == null)
+        return null;
+      if (typeof object != "object")
+        return object;
+      if (!Array.isArray(object))
+        return new A._JsonMap(object, Object.create(null));
+      for (i = 0; i < object.length; ++i)
+        object[i] = A._convertJsonToDartLazy(object[i]);
+      return object;
+    },
     _Utf8Decoder__makeNativeUint8List(codeUnits, start, end) {
       var bytes, t1, i, t2, b,
         $length = end - start;
@@ -3898,9 +4098,28 @@
           return "";
       }
     },
+    _JsonMap: function _JsonMap(t0, t1) {
+      this._original = t0;
+      this._processed = t1;
+      this._convert$_data = null;
+    },
+    _JsonMapKeyIterable: function _JsonMapKeyIterable(t0) {
+      this._parent = t0;
+    },
     _Utf8Decoder__decoder_closure: function _Utf8Decoder__decoder_closure() {
     },
     _Utf8Decoder__decoderNonfatal_closure: function _Utf8Decoder__decoderNonfatal_closure() {
+    },
+    AsciiCodec: function AsciiCodec() {
+    },
+    _UnicodeSubsetEncoder: function _UnicodeSubsetEncoder() {
+    },
+    AsciiEncoder: function AsciiEncoder() {
+    },
+    _UnicodeSubsetDecoder: function _UnicodeSubsetDecoder() {
+    },
+    AsciiDecoder: function AsciiDecoder(t0) {
+      this._allowInvalid = t0;
     },
     Base64Codec: function Base64Codec() {
     },
@@ -3919,6 +4138,8 @@
     },
     Converter: function Converter() {
     },
+    Encoding: function Encoding() {
+    },
     JsonUnsupportedObjectError: function JsonUnsupportedObjectError(t0, t1) {
       this.unsupportedObject = t0;
       this.cause = t1;
@@ -3932,6 +4153,9 @@
     JsonEncoder: function JsonEncoder(t0) {
       this._toEncodable = t0;
     },
+    JsonDecoder: function JsonDecoder(t0) {
+      this._reviver = t0;
+    },
     _JsonStringifier: function _JsonStringifier() {
     },
     _JsonStringifier_writeMap_closure: function _JsonStringifier_writeMap_closure(t0, t1) {
@@ -3942,6 +4166,22 @@
       this._sink = t0;
       this._seen = t1;
       this._toEncodable = t2;
+    },
+    _LineSplitIterable: function _LineSplitIterable(t0, t1, t2) {
+      this._convert$_source = t0;
+      this._convert$_start = t1;
+      this._end = t2;
+    },
+    _LineSplitIterator: function _LineSplitIterator(t0, t1, t2) {
+      var _ = this;
+      _._convert$_source = t0;
+      _._end = t1;
+      _._convert$_start = t2;
+      _._lineStart = 0;
+      _._lineEnd = -1;
+      _._convert$_current = null;
+    },
+    Utf8Codec: function Utf8Codec() {
     },
     Utf8Encoder: function Utf8Encoder() {
     },
@@ -4806,17 +5046,32 @@
       return list;
     },
     String_String$fromCharCodes(charCodes, start, end) {
-      var maxLength, t1;
+      var t1, t2, maxLength, array, len;
       A.RangeError_checkNotNegative(start, "start");
-      if (end != null) {
+      t1 = end == null;
+      t2 = !t1;
+      if (t2) {
         maxLength = end - start;
         if (maxLength < 0)
           throw A.wrapException(A.RangeError$range(end, start, null, "end", null));
         if (maxLength === 0)
           return "";
       }
-      t1 = A.String__stringFromUint8List(charCodes, start, end);
-      return t1;
+      if (Array.isArray(charCodes)) {
+        array = charCodes;
+        len = array.length;
+        if (t1)
+          end = len;
+        return A.Primitives_stringFromCharCodes(start > 0 || end < len ? array.slice(start, end) : array);
+      }
+      if (type$.NativeUint8List._is(charCodes))
+        return A.String__stringFromUint8List(charCodes, start, end);
+      if (t2)
+        charCodes = J.take$1$ax(charCodes, end);
+      if (start > 0)
+        charCodes = J.skip$1$ax(charCodes, start);
+      t1 = A.List_List$_of(charCodes, type$.int);
+      return A.Primitives_stringFromCharCodes(t1);
     },
     String__stringFromUint8List(charCodes, start, endOrNull) {
       var len = charCodes.length;
@@ -4844,6 +5099,84 @@
     },
     StackTrace_current() {
       return A.getTraceFromException(new Error());
+    },
+    DateTime__finishParse(year, month, day, hour, minute, second, millisecond, microsecond, isUtc) {
+      var value = A.Primitives_valueFromDecomposedDate(year, month, day, hour, minute, second, millisecond, microsecond, isUtc);
+      if (value == null)
+        return null;
+      return new A.DateTime(A.DateTime__validate(value, microsecond, isUtc), microsecond, isUtc);
+    },
+    DateTime_parse(formattedString) {
+      var t1, t2, t3, years, month, day, hour, minute, second, milliAndMicroseconds, millisecond, isUtc, tzSign, sign, hourDifference, result, _null = null,
+        match = $.$get$DateTime__parseFormat().firstMatch$1(formattedString);
+      if (match != null) {
+        t1 = new A.DateTime_parse_parseIntOrZero();
+        t2 = match._match;
+        if (1 >= t2.length)
+          return A.ioore(t2, 1);
+        t3 = t2[1];
+        t3.toString;
+        years = A.int_parse(t3, _null);
+        if (2 >= t2.length)
+          return A.ioore(t2, 2);
+        t3 = t2[2];
+        t3.toString;
+        month = A.int_parse(t3, _null);
+        if (3 >= t2.length)
+          return A.ioore(t2, 3);
+        t3 = t2[3];
+        t3.toString;
+        day = A.int_parse(t3, _null);
+        if (4 >= t2.length)
+          return A.ioore(t2, 4);
+        hour = t1.call$1(t2[4]);
+        if (5 >= t2.length)
+          return A.ioore(t2, 5);
+        minute = t1.call$1(t2[5]);
+        if (6 >= t2.length)
+          return A.ioore(t2, 6);
+        second = t1.call$1(t2[6]);
+        if (7 >= t2.length)
+          return A.ioore(t2, 7);
+        milliAndMicroseconds = new A.DateTime_parse_parseMilliAndMicroseconds().call$1(t2[7]);
+        millisecond = B.JSInt_methods._tdivFast$1(milliAndMicroseconds, 1000);
+        t3 = t2.length;
+        if (8 >= t3)
+          return A.ioore(t2, 8);
+        isUtc = t2[8] != null;
+        if (isUtc) {
+          if (9 >= t3)
+            return A.ioore(t2, 9);
+          tzSign = t2[9];
+          if (tzSign != null) {
+            sign = tzSign === "-" ? -1 : 1;
+            if (10 >= t3)
+              return A.ioore(t2, 10);
+            t3 = t2[10];
+            t3.toString;
+            hourDifference = A.int_parse(t3, _null);
+            if (11 >= t2.length)
+              return A.ioore(t2, 11);
+            minute -= sign * (t1.call$1(t2[11]) + 60 * hourDifference);
+          }
+        }
+        result = A.DateTime__finishParse(years, month, day, hour, minute, second, millisecond, milliAndMicroseconds % 1000, isUtc);
+        if (result == null)
+          throw A.wrapException(A.FormatException$("Time out of range", formattedString, _null));
+        return result;
+      } else
+        throw A.wrapException(A.FormatException$("Invalid date format", formattedString, _null));
+    },
+    DateTime__validate(millisecondsSinceEpoch, microsecond, isUtc) {
+      var _s11_ = "microsecond";
+      if (microsecond > 999)
+        throw A.wrapException(A.RangeError$range(microsecond, 0, 999, _s11_, null));
+      if (millisecondsSinceEpoch < -864e13 || millisecondsSinceEpoch > 864e13)
+        throw A.wrapException(A.RangeError$range(millisecondsSinceEpoch, -864e13, 864e13, "millisecondsSinceEpoch", null));
+      if (millisecondsSinceEpoch === 864e13 && microsecond !== 0)
+        throw A.wrapException(A.ArgumentError$value(microsecond, _s11_, "Time including microseconds is outside valid range"));
+      A.checkNotNullable(isUtc, "isUtc", type$.bool);
+      return millisecondsSinceEpoch;
     },
     DateTime__fourDigits(n) {
       var absN = Math.abs(n),
@@ -5094,6 +5427,10 @@
       this._core$_value = t0;
       this._microsecond = t1;
       this.isUtc = t2;
+    },
+    DateTime_parse_parseIntOrZero: function DateTime_parse_parseIntOrZero() {
+    },
+    DateTime_parse_parseMilliAndMicroseconds: function DateTime_parse_parseMilliAndMicroseconds() {
     },
     _Enum: function _Enum() {
     },
@@ -5588,6 +5925,48 @@
     },
     _AudioParamMap_JavaScriptObject_MapMixin: function _AudioParamMap_JavaScriptObject_MapMixin() {
     },
+    CryptoUtils_getSecureRandom() {
+      var i, t1, t2, iv, t3, t4,
+        secureRandom = A.FortunaRandom$(),
+        random = $.$get$Random__secureRandom(),
+        seeds = A._setArrayType([], type$.JSArray_int);
+      for (i = 0; i < 32; ++i)
+        B.JSArray_methods.add$1(seeds, random.nextInt$1(256));
+      t1 = new Uint8Array(A._ensureNativeList(seeds));
+      t2 = t1.length;
+      if (t2 !== 32)
+        A.throwExpression(A.ArgumentError$("Fortuna PRNG can only be used with 256 bits keys", null));
+      iv = new Uint8Array(16);
+      iv[15] = 1;
+      t3 = secureRandom.__FortunaRandom__prng_A;
+      t3 === $ && A.throwLateFieldNI("_prng");
+      t4 = type$.ParametersWithIV_KeyParameter;
+      t1 = new A.ParametersWithIV(iv, new A.KeyParameter(t1), t4);
+      if (t4._is(t1)) {
+        t3.__AutoSeedBlockCtrRandom__autoReseedKeyLength_A = t2;
+        t2 = t3.__AutoSeedBlockCtrRandom__delegate_A;
+        t2 === $ && A.throwLateFieldNI("_delegate");
+        t2.seed$1(0, t1);
+      } else
+        A.throwExpression(A.ArgumentError$("Only types ParametersWithIV<KeyParameter> or KeyParameter allowed for seeding", null));
+      return secureRandom;
+    },
+    CryptoUtils_getBytesFromPEMString(pem) {
+      var t2, t3, lines, base64,
+        t1 = type$._LineSplitIterable;
+      t1 = A.MappedIterable_MappedIterable(new A._LineSplitIterable(pem, 0, A.RangeError_checkValidRange(0, null, pem.length)), t1._eval$1("String(Iterable.E)")._as(new A.CryptoUtils_getBytesFromPEMString_closure()), t1._eval$1("Iterable.E"), type$.String);
+      t2 = A._instanceType(t1);
+      t3 = t2._eval$1("WhereIterable<Iterable.E>");
+      lines = A.List_List$_of(new A.WhereIterable(t1, t2._eval$1("bool(Iterable.E)")._as(new A.CryptoUtils_getBytesFromPEMString_closure0()), t3), t3._eval$1("Iterable.E"));
+      if (lines.length < 2 || !J.startsWith$1$s(B.JSArray_methods.get$first(lines), "-----BEGIN") || !J.startsWith$1$s(B.JSArray_methods.get$last(lines), "-----END"))
+        throw A.wrapException(A.ArgumentError$("The given string does not have the correct begin/end markers expected in a PEM file.", null));
+      base64 = B.JSArray_methods.join$1(B.JSArray_methods.sublist$2(lines, 1, lines.length - 1), "");
+      return new Uint8Array(A._ensureNativeList(B.C_Base64Decoder.convert$1(base64)));
+    },
+    CryptoUtils_getBytesFromPEMString_closure: function CryptoUtils_getBytesFromPEMString_closure() {
+    },
+    CryptoUtils_getBytesFromPEMString_closure0: function CryptoUtils_getBytesFromPEMString_closure0() {
+    },
     StreamCipherAsBlockCipher: function StreamCipherAsBlockCipher() {
     },
     RegistryFactoryException$(message) {
@@ -5600,6 +5979,8 @@
       this.publicKey = t0;
       this.privateKey = t1;
       this.$ti = t2;
+    },
+    AsymmetricKeyParameter: function AsymmetricKeyParameter() {
     },
     CipherParameters: function CipherParameters() {
     },
@@ -5617,6 +5998,10 @@
       this.iv = t0;
       this.parameters = t1;
       this.$ti = t2;
+    },
+    PrivateKeyParameter: function PrivateKeyParameter(t0, t1) {
+      this.key = t0;
+      this.$ti = t1;
     },
     RegistryFactoryException: function RegistryFactoryException(t0) {
       this.message = t0;
@@ -5637,14 +6022,68 @@
       _.valueStartPosition = 2;
       _.valueByteLength = null;
     },
+    ASN1Parser: function ASN1Parser(t0) {
+      this.bytes = t0;
+      this._asn1_parser$_position = 0;
+    },
     ASN1BitString$(stringValues) {
       var t1 = new A.ASN1BitString(stringValues, 3, null);
       t1.ASN1Object$1$tag(3);
       return t1;
     },
+    ASN1BitString$fromBytes(bytes) {
+      var t1 = new A.ASN1BitString(null, null, bytes);
+      t1.ASN1Object$fromBytes$1(bytes);
+      t1.ASN1BitString$fromBytes$1(bytes);
+      return t1;
+    },
     ASN1BitString: function ASN1BitString(t0, t1, t2) {
       var _ = this;
       _.stringValues = t0;
+      _.elements = _.unusedbits = null;
+      _.tag = t1;
+      _.encodedBytes = t2;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1BMPString: function ASN1BMPString(t0, t1, t2) {
+      var _ = this;
+      _.stringValue = t0;
+      _.elements = null;
+      _.tag = t1;
+      _.encodedBytes = t2;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1Boolean: function ASN1Boolean(t0, t1) {
+      var _ = this;
+      _.boolValue = null;
+      _.tag = t0;
+      _.encodedBytes = t1;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1GeneralizedTime: function ASN1GeneralizedTime(t0, t1) {
+      var _ = this;
+      _.dateTimeValue = null;
+      _.tag = t0;
+      _.encodedBytes = t1;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1IA5String$fromBytes(encodedBytes) {
+      var t1 = new A.ASN1IA5String(null, null, encodedBytes);
+      t1.ASN1Object$fromBytes$1(encodedBytes);
+      t1.ASN1IA5String$fromBytes$1(encodedBytes);
+      return t1;
+    },
+    ASN1IA5String: function ASN1IA5String(t0, t1, t2) {
+      var _ = this;
+      _.stringValue = t0;
       _.elements = null;
       _.tag = t1;
       _.encodedBytes = t2;
@@ -5666,9 +6105,17 @@
       _.valueStartPosition = 2;
       _.valueByteLength = null;
     },
+    ASN1Null: function ASN1Null(t0, t1) {
+      var _ = this;
+      _.tag = t0;
+      _.encodedBytes = t1;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
     ASN1ObjectIdentifier: function ASN1ObjectIdentifier(t0, t1) {
       var _ = this;
-      _.objectIdentifier = null;
+      _.objectIdentifierAsString = _.objectIdentifier = null;
       _.tag = t0;
       _.encodedBytes = t1;
       _.valueBytes = null;
@@ -5680,9 +6127,32 @@
       t1.ASN1Object$1$tag(4);
       return t1;
     },
+    ASN1OctetString$fromBytes(encodedBytes) {
+      var t1 = new A.ASN1OctetString(null, null, encodedBytes);
+      t1.ASN1Object$fromBytes$1(encodedBytes);
+      t1.ASN1OctetString$fromBytes$1(encodedBytes);
+      return t1;
+    },
     ASN1OctetString: function ASN1OctetString(t0, t1, t2) {
       var _ = this;
       _.octets = t0;
+      _.elements = null;
+      _.tag = t1;
+      _.encodedBytes = t2;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1PrintableString$fromBytes(encodedBytes) {
+      var t1 = new A.ASN1PrintableString(null, null, encodedBytes);
+      t1.ASN1Object$fromBytes$1(encodedBytes);
+      t1.ASN1PrintableString$fromBytes$1(encodedBytes);
+      return t1;
+    },
+    ASN1PrintableString: function ASN1PrintableString(t0, t1, t2) {
+      var _ = this;
+      _.stringValue = t0;
+      _.elements = null;
       _.tag = t1;
       _.encodedBytes = t2;
       _.valueBytes = null;
@@ -5703,14 +6173,79 @@
       _.valueStartPosition = 2;
       _.valueByteLength = null;
     },
+    ASN1Set: function ASN1Set(t0, t1) {
+      var _ = this;
+      _.elements = null;
+      _.tag = t0;
+      _.encodedBytes = t1;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1TeletextString$fromBytes(encodedBytes) {
+      var t1 = new A.ASN1TeletextString(null, null, encodedBytes);
+      t1.ASN1Object$fromBytes$1(encodedBytes);
+      t1.ASN1TeletextString$fromBytes$1(encodedBytes);
+      return t1;
+    },
+    ASN1TeletextString: function ASN1TeletextString(t0, t1, t2) {
+      var _ = this;
+      _.stringValue = t0;
+      _.elements = null;
+      _.tag = t1;
+      _.encodedBytes = t2;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1UtcTime: function ASN1UtcTime(t0, t1) {
+      var _ = this;
+      _.time = null;
+      _.tag = t0;
+      _.encodedBytes = t1;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
+    ASN1UTF8String: function ASN1UTF8String(t0, t1, t2) {
+      var _ = this;
+      _.utf8StringValue = t0;
+      _.elements = null;
+      _.tag = t1;
+      _.encodedBytes = t2;
+      _.valueBytes = null;
+      _.valueStartPosition = 2;
+      _.valueByteLength = null;
+    },
     UnsupportedAsn1EncodingRuleException$(rule) {
       return new A.UnsupportedAsn1EncodingRuleException(rule);
     },
     UnsupportedAsn1EncodingRuleException: function UnsupportedAsn1EncodingRuleException(t0) {
       this.rule = t0;
     },
+    UnsupportedASN1TagException$(tag) {
+      return new A.UnsupportedASN1TagException(tag);
+    },
+    UnsupportedASN1TagException: function UnsupportedASN1TagException(t0) {
+      this.tag = t0;
+    },
     UnsupportedObjectIdentifierException: function UnsupportedObjectIdentifierException(t0) {
       this.oiString = t0;
+    },
+    RSAPrivateKey$(modulus, privateExponent, p, q, publicExponent) {
+      var t2,
+        t1 = new A.RSAPrivateKey(p, q, modulus, privateExponent);
+      p.toString;
+      q.toString;
+      t2 = p.$mul(0, q).compareTo$1(0, modulus);
+      if (t2 !== 0)
+        A.throwExpression(A.ArgumentError$value("modulus inconsistent with RSA p and q", null, null));
+      t2 = $.$get$_BigIntImpl_one();
+      t2 = privateExponent.modInverse$1(0, p.$sub(0, t2).$mul(0, q.$sub(0, t2)));
+      t1._pubExp = t2;
+      if (publicExponent != null && !publicExponent.$eq(0, t2))
+        A.throwExpression(A.ArgumentError$("public exponent inconsistent with RSA private exponent, p and q", null));
+      return t1;
     },
     RSAAsymmetricKey: function RSAAsymmetricKey() {
     },
@@ -5727,16 +6262,19 @@
       this.exponent = t1;
     },
     OAEPEncoding_OAEPEncoding$withSHA1(engine, encodingParams) {
-      var t2,
-        t1 = new A.OAEPEncoding_OAEPEncoding$withSHA1_closure();
-      t1.call$0();
-      t2 = t1.call$0().get$digestSize();
-      t2 = new Uint8Array(t2);
-      t1.call$0().doFinal$2(t2, 0);
-      return new A.OAEPEncoding(t2);
+      var t1 = new A.OAEPEncoding_OAEPEncoding$withSHA1_closure(),
+        t2 = t1.call$0(),
+        t3 = t1.call$0().get$digestSize();
+      t3 = new Uint8Array(t3);
+      t1.call$0().doFinal$2(t3, 0);
+      return new A.OAEPEncoding(t2, t3, encodingParams, engine);
     },
-    OAEPEncoding: function OAEPEncoding(t0) {
-      this.defHash = t0;
+    OAEPEncoding: function OAEPEncoding(t0, t1, t2, t3) {
+      var _ = this;
+      _.hash = t0;
+      _.defHash = t1;
+      _.encodingParams = t2;
+      _._oaep$_engine = t3;
     },
     OAEPEncoding_factoryConfig_closure: function OAEPEncoding_factoryConfig_closure() {
     },
@@ -5746,9 +6284,10 @@
     OAEPEncoding_OAEPEncoding$withSHA1_closure: function OAEPEncoding_OAEPEncoding$withSHA1_closure() {
     },
     PKCS1Encoding$(_engine) {
-      return new A.PKCS1Encoding();
+      return new A.PKCS1Encoding(_engine);
     },
-    PKCS1Encoding: function PKCS1Encoding() {
+    PKCS1Encoding: function PKCS1Encoding(t0) {
+      this._engine = t0;
     },
     PKCS1Encoding_factoryConfig_closure: function PKCS1Encoding_factoryConfig_closure() {
     },
@@ -5759,6 +6298,10 @@
       return new A.RSAEngine();
     },
     RSAEngine: function RSAEngine() {
+      var _ = this;
+      _.__RSAEngine__forEncryption_A = $;
+      _._key = null;
+      _.__RSAEngine__qInv_A = _.__RSAEngine__dQ_A = _.__RSAEngine__dP_A = $;
     },
     RSAEngine_factoryConfig_closure: function RSAEngine_factoryConfig_closure() {
     },
@@ -5931,7 +6474,7 @@
       var _ = this;
       _._digestLength = 64;
       _._keyLength = 0;
-      _._blake2b$_buffer = _._key = _._personalization = _._salt = null;
+      _._blake2b$_buffer = _._blake2b$_key = _._personalization = _._salt = null;
       _._blake2b$_bufferPos = 0;
       _._internalState = t0;
       _._chainValue = null;
@@ -7668,31 +8211,8 @@
     main_closure: function main_closure(t0) {
       this.self = t0;
     },
-    CryptoUtils_getSecureRandom() {
-      var i, t1, t2, iv, t3, t4,
-        secureRandom = A.FortunaRandom$(),
-        random = $.$get$Random__secureRandom(),
-        seeds = A._setArrayType([], type$.JSArray_int);
-      for (i = 0; i < 32; ++i)
-        B.JSArray_methods.add$1(seeds, random.nextInt$1(256));
-      t1 = new Uint8Array(A._ensureNativeList(seeds));
-      t2 = t1.length;
-      if (t2 !== 32)
-        A.throwExpression(A.ArgumentError$("Fortuna PRNG can only be used with 256 bits keys", null));
-      iv = new Uint8Array(16);
-      iv[15] = 1;
-      t3 = secureRandom.__FortunaRandom__prng_A;
-      t3 === $ && A.throwLateFieldNI("_prng");
-      t4 = type$.ParametersWithIV_KeyParameter;
-      t1 = new A.ParametersWithIV(iv, new A.KeyParameter(t1), t4);
-      if (t4._is(t1)) {
-        t3.__AutoSeedBlockCtrRandom__autoReseedKeyLength_A = t2;
-        t2 = t3.__AutoSeedBlockCtrRandom__delegate_A;
-        t2 === $ && A.throwLateFieldNI("_delegate");
-        t2.seed$1(0, t1);
-      } else
-        A.throwExpression(A.ArgumentError$("Only types ParametersWithIV<KeyParameter> or KeyParameter allowed for seeding", null));
-      return secureRandom;
+    main__closure: function main__closure(t0) {
+      this.privateKeyPem = t0;
     },
     StringUtils_chunk(s, chunkSize) {
       var end, i, i0,
@@ -7790,11 +8310,47 @@
         return true;
       return false;
     },
+    ASN1Utils_calculateIndefiniteLength(bytes, startPosition) {
+      var t1, t2, currentPosition, indefiniteLengthObjects, nextLength, valueStartPosition, _null = null;
+      for (t1 = bytes.length, t2 = t1 - 1, currentPosition = startPosition, indefiniteLengthObjects = 0; currentPosition < t2;) {
+        if (!(currentPosition >= 0))
+          return A.ioore(bytes, currentPosition);
+        if (bytes[currentPosition] === 0 && bytes[currentPosition + 1] === 0) {
+          --indefiniteLengthObjects;
+          if (indefiniteLengthObjects === 0)
+            return currentPosition - startPosition;
+          currentPosition += 2;
+        } else {
+          nextLength = A.ASN1Utils_decodeLength(new Uint8Array(bytes.subarray(currentPosition, A._checkValidRange(currentPosition, _null, t1))));
+          valueStartPosition = A.ASN1Utils_calculateValueStartPosition(new Uint8Array(bytes.subarray(currentPosition, A._checkValidRange(currentPosition, _null, t1))));
+          if (nextLength === 0)
+            throw A.wrapException(A.ArgumentError$("Invalid length of zero.", _null));
+          if (valueStartPosition <= 0)
+            throw A.wrapException(A.ArgumentError$("Invalid value start position: " + valueStartPosition, _null));
+          if (nextLength === -1) {
+            ++indefiniteLengthObjects;
+            currentPosition += valueStartPosition;
+          } else
+            currentPosition += valueStartPosition + nextLength;
+        }
+      }
+      throw A.wrapException(A.ArgumentError$("End of content octets not found", _null));
+    },
     ObjectIdentifiers_getIdentifierByName(readableName) {
       var _i, element;
       for (_i = 0; _i < 158; ++_i) {
         element = B.List_qyK[_i];
         if (element.$index(0, "readableName") === readableName)
+          return element;
+      }
+      return null;
+    },
+    ObjectIdentifiers_getIdentifierByIdentifier(identifier) {
+      var _i, element, t1;
+      for (_i = 0; _i < 158; ++_i) {
+        element = B.List_qyK[_i];
+        t1 = element.$index(0, "identifierString");
+        if (t1 == null ? identifier == null : t1 === identifier)
           return element;
       }
       return null;
@@ -7833,6 +8389,34 @@
         outArr[t3] = t4;
       }
     },
+    decodeBigInt(bytes) {
+      var negative, result, i, t2,
+        t1 = bytes.length;
+      if (t1 !== 0) {
+        if (0 >= t1)
+          return A.ioore(bytes, 0);
+        negative = (bytes[0] & 128) === 128;
+      } else
+        negative = false;
+      if (t1 === 1) {
+        if (0 >= t1)
+          return A.ioore(bytes, 0);
+        result = A._BigIntImpl__BigIntImpl$from(bytes[0]);
+      } else {
+        result = $.$get$_BigIntImpl_zero();
+        for (i = 0; i < t1; ++i) {
+          t2 = t1 - i - 1;
+          if (!(t2 >= 0))
+            return A.ioore(bytes, t2);
+          result = result.$or(0, A._BigIntImpl__BigIntImpl$from(bytes[t2]).$shl(0, 8 * i));
+        }
+      }
+      t1 = $.$get$_BigIntImpl_zero();
+      t2 = result.compareTo$1(0, t1);
+      if (t2 !== 0)
+        t1 = negative ? result.toSigned$1(0, result.get$bitLength(0)) : result;
+      return t1;
+    },
     decodeBigIntWithSign(sign, magnitude) {
       var t1, result, i, t2;
       if (sign === 0)
@@ -7860,10 +8444,9 @@
       return result;
     },
     encodeBigInt(number) {
-      var rawSize, needsPaddingByte, size, result, i,
-        t1 = $.$get$_BigIntImpl_zero(),
-        t2 = number.compareTo$1(0, t1);
-      if (t2 === 0)
+      var rawSize, t2, needsPaddingByte, size, result, i,
+        t1 = $.$get$_BigIntImpl_zero();
+      if (J.$eq$(number, t1))
         return new Uint8Array(A._ensureNativeList(A._setArrayType([0], type$.JSArray_int)));
       if (number.compareTo$1(0, t1) > 0) {
         rawSize = B.JSInt_methods._shrOtherPositive$1(number.get$bitLength(0) + 7, 3);
@@ -7992,8 +8575,31 @@
       var t1, _i;
       A._arrayInstanceType(receiver)._eval$1("Iterable<1>")._as(collection);
       receiver.$flags & 1 && A.throwUnsupportedOperation(receiver, "addAll", 2);
-      for (t1 = collection.length, _i = 0; _i < t1; ++_i)
+      if (Array.isArray(collection)) {
+        this._addAllFromArray$1(receiver, collection);
+        return;
+      }
+      for (t1 = collection.length, _i = 0; _i < collection.length; collection.length === t1 || (0, A.throwConcurrentModificationError)(collection), ++_i)
         receiver.push(collection[_i]);
+    },
+    _addAllFromArray$1(receiver, array) {
+      var len, i;
+      type$.JSArray_dynamic._as(array);
+      len = array.length;
+      if (len === 0)
+        return;
+      if (receiver === array)
+        throw A.wrapException(A.ConcurrentModificationError$(receiver));
+      for (i = 0; i < len; ++i)
+        receiver.push(array[i]);
+    },
+    clear$0(receiver) {
+      receiver.$flags & 1 && A.throwUnsupportedOperation(receiver, "clear", "clear");
+      receiver.length = 0;
+    },
+    map$1$1(receiver, f, $T) {
+      var t1 = A._arrayInstanceType(receiver);
+      return new A.MappedListIterable(receiver, t1._bind$1($T)._eval$1("1(2)")._as(f), t1._eval$1("@<1>")._bind$1($T)._eval$1("MappedListIterable<1,2>"));
     },
     join$1(receiver, separator) {
       var i,
@@ -8001,6 +8607,12 @@
       for (i = 0; i < receiver.length; ++i)
         this.$indexSet(list, i, A.S(receiver[i]));
       return list.join(separator);
+    },
+    take$1(receiver, n) {
+      return A.SubListIterable$(receiver, 0, A.checkNotNullable(n, "count", type$.int), A._arrayInstanceType(receiver)._precomputed1);
+    },
+    skip$1(receiver, n) {
+      return A.SubListIterable$(receiver, n, null, A._arrayInstanceType(receiver)._precomputed1);
     },
     elementAt$1(receiver, index) {
       if (!(index >= 0 && index < receiver.length))
@@ -8016,6 +8628,11 @@
       if (start === end)
         return A._setArrayType([], A._arrayInstanceType(receiver));
       return A._setArrayType(receiver.slice(start, end), A._arrayInstanceType(receiver));
+    },
+    get$first(receiver) {
+      if (receiver.length > 0)
+        return receiver[0];
+      throw A.wrapException(A.IterableElementError_noElement());
     },
     get$last(receiver) {
       var t1 = receiver.length;
@@ -8057,6 +8674,7 @@
       return receiver.length;
     },
     $index(receiver, index) {
+      A._asInt(index);
       if (!(index >= 0 && index < receiver.length))
         throw A.wrapException(A.diagnoseIndexError(receiver, index));
       return receiver[index];
@@ -8069,6 +8687,7 @@
       receiver[index] = value;
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -8094,7 +8713,8 @@
       _this._current = t1[t2];
       _this._index = t2 + 1;
       return true;
-    }
+    },
+    $isIterator: 1
   };
   J.JSNumber.prototype = {
     toInt$0(receiver) {
@@ -8165,9 +8785,6 @@
       factor = Math.pow(2, floorLog2);
       scaled = absolute < 1 ? absolute / factor : factor / absolute;
       return ((scaled * 9007199254740992 | 0) + (scaled * 3542243181176521 | 0)) * 599197 + floorLog2 * 1259 & 536870911;
-    },
-    $add(receiver, other) {
-      return receiver + other;
     },
     $mod(receiver, other) {
       var result = receiver % other;
@@ -8268,11 +8885,39 @@
     $isTrustedGetRuntimeType: 1
   };
   J.JSString.prototype = {
+    startsWith$1(receiver, pattern) {
+      var otherLength = pattern.length;
+      if (otherLength > receiver.length)
+        return false;
+      return pattern === receiver.substring(0, otherLength);
+    },
     substring$2(receiver, start, end) {
       return receiver.substring(start, A.RangeError_checkValidRange(start, end, receiver.length));
     },
     substring$1(receiver, start) {
       return this.substring$2(receiver, start, null);
+    },
+    trim$0(receiver) {
+      var startIndex, t1, endIndex0,
+        result = receiver.trim(),
+        endIndex = result.length;
+      if (endIndex === 0)
+        return result;
+      if (0 >= endIndex)
+        return A.ioore(result, 0);
+      if (result.charCodeAt(0) === 133) {
+        startIndex = J.JSString__skipLeadingWhitespace(result, 1);
+        if (startIndex === endIndex)
+          return "";
+      } else
+        startIndex = 0;
+      t1 = endIndex - 1;
+      if (!(t1 >= 0))
+        return A.ioore(result, t1);
+      endIndex0 = result.charCodeAt(t1) === 133 ? J.JSString__skipTrailingWhitespace(result, t1) : endIndex;
+      if (startIndex === 0 && endIndex0 === endIndex)
+        return result;
+      return result.substring(startIndex, endIndex0);
     },
     $mul(receiver, times) {
       var s, result;
@@ -8291,6 +8936,12 @@
         s += s;
       }
       return result;
+    },
+    padLeft$2(receiver, width, padding) {
+      var delta = width - receiver.length;
+      if (delta <= 0)
+        return receiver;
+      return this.$mul(padding, delta) + receiver;
     },
     toString$0(receiver) {
       return receiver;
@@ -8311,6 +8962,12 @@
     },
     get$length(receiver) {
       return receiver.length;
+    },
+    $index(receiver, index) {
+      A._asInt(index);
+      if (index >= receiver.length)
+        throw A.wrapException(A.diagnoseIndexError(receiver, index));
+      return receiver[index];
     },
     $isJSIndexable: 1,
     $isTrustedGetRuntimeType: 1,
@@ -8359,6 +9016,19 @@
   A.LateError.prototype = {
     toString$0(_) {
       return "LateInitializationError: " + this._message;
+    }
+  };
+  A.CodeUnits.prototype = {
+    get$length(_) {
+      return this.__internal$_string.length;
+    },
+    $index(_, i) {
+      var t1;
+      A._asInt(i);
+      t1 = this.__internal$_string;
+      if (!(i >= 0 && i < t1.length))
+        return A.ioore(t1, i);
+      return t1.charCodeAt(i);
     }
   };
   A.SentinelValue.prototype = {};
@@ -8481,7 +9151,34 @@
       _this.__internal$_current = t2.elementAt$1(t1, t3);
       ++_this.__internal$_index;
       return true;
+    },
+    $isIterator: 1
+  };
+  A.MappedIterable.prototype = {
+    get$iterator(_) {
+      return new A.MappedIterator(J.get$iterator$ax(this.__internal$_iterable), this._f, A._instanceType(this)._eval$1("MappedIterator<1,2>"));
+    },
+    get$length(_) {
+      return J.get$length$asx(this.__internal$_iterable);
     }
+  };
+  A.EfficientLengthMappedIterable.prototype = {$isEfficientLengthIterable: 1};
+  A.MappedIterator.prototype = {
+    moveNext$0() {
+      var _this = this,
+        t1 = _this._iterator;
+      if (t1.moveNext$0()) {
+        _this.__internal$_current = _this._f.call$1(t1.get$current(t1));
+        return true;
+      }
+      _this.__internal$_current = null;
+      return false;
+    },
+    get$current(_) {
+      var t1 = this.__internal$_current;
+      return t1 == null ? this.$ti._rest[1]._as(t1) : t1;
+    },
+    $isIterator: 1
   };
   A.MappedListIterable.prototype = {
     get$length(_) {
@@ -8490,6 +9187,25 @@
     elementAt$1(_, index) {
       return this._f.call$1(J.elementAt$1$ax(this._source, index));
     }
+  };
+  A.WhereIterable.prototype = {
+    get$iterator(_) {
+      return new A.WhereIterator(J.get$iterator$ax(this.__internal$_iterable), this._f, this.$ti._eval$1("WhereIterator<1>"));
+    }
+  };
+  A.WhereIterator.prototype = {
+    moveNext$0() {
+      var t1, t2;
+      for (t1 = this._iterator, t2 = this._f; t1.moveNext$0();)
+        if (t2.call$1(t1.get$current(t1)))
+          return true;
+      return false;
+    },
+    get$current(_) {
+      var t1 = this._iterator;
+      return t1.get$current(t1);
+    },
+    $isIterator: 1
   };
   A.EmptyIterable.prototype = {
     get$iterator(_) {
@@ -8509,9 +9225,29 @@
     },
     get$current(_) {
       throw A.wrapException(A.IterableElementError_noElement());
+    },
+    $isIterator: 1
+  };
+  A.FixedLengthListMixin.prototype = {
+    addAll$1(receiver, iterable) {
+      A.instanceType(receiver)._eval$1("Iterable<FixedLengthListMixin.E>")._as(iterable);
+      throw A.wrapException(A.UnsupportedError$("Cannot add to a fixed-length list"));
     }
   };
-  A.FixedLengthListMixin.prototype = {};
+  A.UnmodifiableListMixin.prototype = {
+    $indexSet(_, index, value) {
+      A._instanceType(this)._eval$1("UnmodifiableListMixin.E")._as(value);
+      throw A.wrapException(A.UnsupportedError$("Cannot modify an unmodifiable list"));
+    },
+    setRange$4(_, start, end, iterable, skipCount) {
+      A._instanceType(this)._eval$1("Iterable<UnmodifiableListMixin.E>")._as(iterable);
+      throw A.wrapException(A.UnsupportedError$("Cannot modify an unmodifiable list"));
+    },
+    setRange$3(_, start, end, iterable) {
+      return this.setRange$4(0, start, end, iterable, 0);
+    }
+  };
+  A.UnmodifiableListBase.prototype = {};
   A.ReversedListIterable.prototype = {
     get$length(_) {
       return J.get$length$asx(this._source);
@@ -8886,7 +9622,8 @@
         _this._cell = cell._next;
         return true;
       }
-    }
+    },
+    $isIterator: 1
   };
   A.LinkedHashMapEntriesIterable.prototype = {
     get$length(_) {
@@ -8917,25 +9654,26 @@
         _this._cell = cell._next;
         return true;
       }
-    }
+    },
+    $isIterator: 1
   };
   A.initHooks_closure.prototype = {
     call$1(o) {
       return this.getTag(o);
     },
-    $signature: 9
+    $signature: 11
   };
   A.initHooks_closure0.prototype = {
     call$2(o, tag) {
       return this.getUnknownTag(o, tag);
     },
-    $signature: 12
+    $signature: 177
   };
   A.initHooks_closure1.prototype = {
     call$1(tag) {
       return this.prototypeForTag(A._asString(tag));
     },
-    $signature: 72
+    $signature: 20
   };
   A.JSSyntaxRegExp.prototype = {
     toString$0(_) {
@@ -8976,6 +9714,14 @@
     },
     group$1(index) {
       var t1 = this._match;
+      if (!(index < t1.length))
+        return A.ioore(t1, index);
+      return t1[index];
+    },
+    $index(_, index) {
+      var t1;
+      A._asInt(index);
+      t1 = this._match;
       if (!(index < t1.length))
         return A.ioore(t1, index);
       return t1[index];
@@ -9029,7 +9775,8 @@
       }
       _this._string = _this.__js_helper$_current = null;
       return false;
-    }
+    },
+    $isIterator: 1
   };
   A._Cell.prototype = {
     _readLocal$0() {
@@ -9134,6 +9881,7 @@
   };
   A.NativeTypedArrayOfDouble.prototype = {
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9155,6 +9903,7 @@
     setRange$3(receiver, start, end, iterable) {
       return this.setRange$4(receiver, start, end, iterable, 0);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -9177,6 +9926,7 @@
     setRange$3(receiver, start, end, iterable) {
       return this.setRange$4(receiver, start, end, iterable, 0);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -9197,6 +9947,7 @@
       return B.Type_Int16List_s5h;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9207,6 +9958,7 @@
       return B.Type_Int32List_O8Z;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9217,6 +9969,7 @@
       return B.Type_Int8List_rFV;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9227,6 +9980,7 @@
       return B.Type_Uint16List_kmP;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9238,6 +9992,7 @@
       return B.Type_Uint32List_kmP;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9251,6 +10006,7 @@
       return receiver.length;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9264,6 +10020,7 @@
       return receiver.length;
     },
     $index(receiver, index) {
+      A._asInt(index);
       A._checkValidIndex(index, receiver, receiver.length);
       return receiver[index];
     },
@@ -9274,6 +10031,7 @@
       return this.sublist$2(receiver, start, null);
     },
     $isTrustedGetRuntimeType: 1,
+    $isNativeUint8List: 1,
     $isUint8List: 1
   };
   A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin.prototype = {};
@@ -9318,7 +10076,7 @@
       t2 = this.span;
       t1.firstChild ? t1.removeChild(t2) : t1.appendChild(t2);
     },
-    $signature: 21
+    $signature: 19
   };
   A._AsyncRun__scheduleImmediateJsOverride_internalCallback.prototype = {
     call$0() {
@@ -9615,7 +10373,7 @@
       type$.StackTrace._as(s);
       this.joinedResult._completeErrorObject$1(new A.AsyncError(e, s));
     },
-    $signature: 18
+    $signature: 13
   };
   A._Future__propagateToListeners_handleValueCallback.prototype = {
     call$0() {
@@ -9753,6 +10511,9 @@
     bindUnaryCallbackGuarded$1$1(f, $T) {
       return new A._RootZone_bindUnaryCallbackGuarded_closure(this, $T._eval$1("~(0)")._as(f), $T);
     },
+    $index(_, key) {
+      return null;
+    },
     run$1$1(f, $R) {
       $R._eval$1("0()")._as(f);
       if ($.Zone__current === B.C__RootZone)
@@ -9878,7 +10639,8 @@
         _this._collection$_cell = cell._collection$_next;
         return true;
       }
-    }
+    },
+    $isIterator: 1
   };
   A.ListBase.prototype = {
     get$iterator(receiver) {
@@ -9890,8 +10652,15 @@
     get$isNotEmpty(receiver) {
       return this.get$length(receiver) !== 0;
     },
+    map$1$1(receiver, f, $T) {
+      var t1 = A.instanceType(receiver);
+      return new A.MappedListIterable(receiver, t1._bind$1($T)._eval$1("1(ListBase.E)")._as(f), t1._eval$1("@<ListBase.E>")._bind$1($T)._eval$1("MappedListIterable<1,2>"));
+    },
     skip$1(receiver, count) {
       return A.SubListIterable$(receiver, count, null, A.instanceType(receiver)._eval$1("ListBase.E"));
+    },
+    take$1(receiver, count) {
+      return A.SubListIterable$(receiver, 0, A.checkNotNullable(count, "count", type$.int), A.instanceType(receiver)._eval$1("ListBase.E"));
     },
     fillRange$3(receiver, start, end, fill) {
       var i;
@@ -9944,7 +10713,10 @@
     },
     toString$0(receiver) {
       return A.Iterable_iterableToFullString(receiver, "[", "]");
-    }
+    },
+    $isEfficientLengthIterable: 1,
+    $isIterable: 1,
+    $isList: 1
   };
   A.MapBase.prototype = {
     forEach$1(receiver, action) {
@@ -9990,10 +10762,136 @@
     toString$0(_) {
       return A.Iterable_iterableToFullString(this, "{", "}");
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isSet: 1
   };
   A._SetBase.prototype = {};
+  A._JsonMap.prototype = {
+    $index(_, key) {
+      var result,
+        t1 = this._processed;
+      if (t1 == null)
+        return this._convert$_data.$index(0, key);
+      else if (typeof key != "string")
+        return null;
+      else {
+        result = t1[key];
+        return typeof result == "undefined" ? this._process$1(key) : result;
+      }
+    },
+    get$length(_) {
+      return this._processed == null ? this._convert$_data._length : this._computeKeys$0().length;
+    },
+    get$isEmpty(_) {
+      return this.get$length(0) === 0;
+    },
+    get$keys(_) {
+      var t1;
+      if (this._processed == null) {
+        t1 = this._convert$_data;
+        return new A.LinkedHashMapKeysIterable(t1, A._instanceType(t1)._eval$1("LinkedHashMapKeysIterable<1>"));
+      }
+      return new A._JsonMapKeyIterable(this);
+    },
+    $indexSet(_, key, value) {
+      var processed, original, _this = this;
+      if (_this._processed == null)
+        _this._convert$_data.$indexSet(0, key, value);
+      else if (_this.containsKey$1(0, key)) {
+        processed = _this._processed;
+        processed[key] = value;
+        original = _this._original;
+        if (original == null ? processed != null : original !== processed)
+          original[key] = null;
+      } else
+        _this._upgrade$0().$indexSet(0, key, value);
+    },
+    containsKey$1(_, key) {
+      if (this._processed == null)
+        return this._convert$_data.containsKey$1(0, key);
+      return Object.prototype.hasOwnProperty.call(this._original, key);
+    },
+    forEach$1(_, f) {
+      var keys, i, key, value, _this = this;
+      type$.void_Function_String_dynamic._as(f);
+      if (_this._processed == null)
+        return _this._convert$_data.forEach$1(0, f);
+      keys = _this._computeKeys$0();
+      for (i = 0; i < keys.length; ++i) {
+        key = keys[i];
+        value = _this._processed[key];
+        if (typeof value == "undefined") {
+          value = A._convertJsonToDartLazy(_this._original[key]);
+          _this._processed[key] = value;
+        }
+        f.call$2(key, value);
+        if (keys !== _this._convert$_data)
+          throw A.wrapException(A.ConcurrentModificationError$(_this));
+      }
+    },
+    _computeKeys$0() {
+      var keys = type$.nullable_List_dynamic._as(this._convert$_data);
+      if (keys == null)
+        keys = this._convert$_data = A._setArrayType(Object.keys(this._original), type$.JSArray_String);
+      return keys;
+    },
+    _upgrade$0() {
+      var result, keys, i, t1, key, _this = this;
+      if (_this._processed == null)
+        return _this._convert$_data;
+      result = A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.dynamic);
+      keys = _this._computeKeys$0();
+      for (i = 0; t1 = keys.length, i < t1; ++i) {
+        key = keys[i];
+        result.$indexSet(0, key, _this.$index(0, key));
+      }
+      if (t1 === 0)
+        B.JSArray_methods.add$1(keys, "");
+      else
+        B.JSArray_methods.clear$0(keys);
+      _this._original = _this._processed = null;
+      return _this._convert$_data = result;
+    },
+    _process$1(key) {
+      var result;
+      if (!Object.prototype.hasOwnProperty.call(this._original, key))
+        return null;
+      result = A._convertJsonToDartLazy(this._original[key]);
+      return this._processed[key] = result;
+    }
+  };
+  A._JsonMapKeyIterable.prototype = {
+    get$length(_) {
+      return this._parent.get$length(0);
+    },
+    elementAt$1(_, index) {
+      var t1 = this._parent;
+      if (t1._processed == null)
+        t1 = t1.get$keys(0).elementAt$1(0, index);
+      else {
+        t1 = t1._computeKeys$0();
+        if (!(index >= 0 && index < t1.length))
+          return A.ioore(t1, index);
+        t1 = t1[index];
+      }
+      return t1;
+    },
+    get$iterator(_) {
+      var t1 = this._parent;
+      if (t1._processed == null) {
+        t1 = t1.get$keys(0);
+        t1 = t1.get$iterator(t1);
+      } else {
+        t1 = t1._computeKeys$0();
+        t1 = new J.ArrayIterator(t1, t1.length, A._arrayInstanceType(t1)._eval$1("ArrayIterator<1>"));
+      }
+      return t1;
+    },
+    contains$1(_, key) {
+      return this._parent.containsKey$1(0, key);
+    }
+  };
   A._Utf8Decoder__decoder_closure.prototype = {
     call$0() {
       var t1, exception;
@@ -10018,6 +10916,66 @@
     },
     $signature: 6
   };
+  A.AsciiCodec.prototype = {
+    decode$1(_, bytes) {
+      var t1;
+      type$.List_int._as(bytes);
+      t1 = B.AsciiDecoder_false.convert$1(bytes);
+      return t1;
+    }
+  };
+  A._UnicodeSubsetEncoder.prototype = {
+    convert$1(string) {
+      var stringLength, end, result, i, codeUnit;
+      A._asString(string);
+      stringLength = string.length;
+      end = A.RangeError_checkValidRange(0, null, stringLength);
+      result = new Uint8Array(end);
+      for (i = 0; i < end; ++i) {
+        if (!(i < stringLength))
+          return A.ioore(string, i);
+        codeUnit = string.charCodeAt(i);
+        if ((codeUnit & 4294967168) !== 0)
+          throw A.wrapException(A.ArgumentError$value(string, "string", "Contains invalid characters."));
+        if (!(i < end))
+          return A.ioore(result, i);
+        result[i] = codeUnit;
+      }
+      return result;
+    }
+  };
+  A.AsciiEncoder.prototype = {};
+  A._UnicodeSubsetDecoder.prototype = {
+    convert$1(bytes) {
+      var t1, end, i, byte;
+      type$.List_int._as(bytes);
+      t1 = bytes.length;
+      end = A.RangeError_checkValidRange(0, null, t1);
+      for (i = 0; i < end; ++i) {
+        if (!(i < t1))
+          return A.ioore(bytes, i);
+        byte = bytes[i];
+        if ((byte & 4294967168) !== 0) {
+          if (!this._allowInvalid)
+            throw A.wrapException(A.FormatException$("Invalid value in input: " + byte, null, null));
+          return this._convertInvalid$3(bytes, 0, end);
+        }
+      }
+      return A.String_String$fromCharCodes(bytes, 0, end);
+    },
+    _convertInvalid$3(bytes, start, end) {
+      var t1, i, t2, value;
+      type$.List_int._as(bytes);
+      for (t1 = bytes.length, i = start, t2 = ""; i < end; ++i) {
+        if (!(i < t1))
+          return A.ioore(bytes, i);
+        value = bytes[i];
+        t2 += A.Primitives_stringFromCharCode((value & 4294967168) !== 0 ? 65533 : value);
+      }
+      return t2.charCodeAt(0) == 0 ? t2 : t2;
+    }
+  };
+  A.AsciiDecoder.prototype = {};
   A.Base64Codec.prototype = {
     get$encoder() {
       return B.C_Base64Encoder;
@@ -10087,6 +11045,7 @@
   };
   A.Codec.prototype = {};
   A.Converter.prototype = {};
+  A.Encoding.prototype = {};
   A.JsonUnsupportedObjectError.prototype = {
     toString$0(_) {
       var safeString = A.Error_safeToString(this.unsupportedObject);
@@ -10099,15 +11058,23 @@
     }
   };
   A.JsonCodec.prototype = {
+    decode$2$reviver(_, source, reviver) {
+      var t1 = A._parseJson(source, this.get$decoder()._reviver);
+      return t1;
+    },
     encode$2$toEncodable(value, toEncodable) {
       var t1 = A._JsonStringStringifier_stringify(value, this.get$encoder()._toEncodable, null);
       return t1;
     },
     get$encoder() {
       return B.JsonEncoder_null;
+    },
+    get$decoder() {
+      return B.JsonDecoder_null;
     }
   };
   A.JsonEncoder.prototype = {};
+  A.JsonDecoder.prototype = {};
   A._JsonStringifier.prototype = {
     writeStringContent$1(s) {
       var t1, offset, i, charCode, t2, t3,
@@ -10342,6 +11309,63 @@
     get$_partialResult() {
       var t1 = this._sink._contents;
       return t1.charCodeAt(0) == 0 ? t1 : t1;
+    }
+  };
+  A._LineSplitIterable.prototype = {
+    get$iterator(_) {
+      return new A._LineSplitIterator(this._convert$_source, this._end, this._convert$_start);
+    }
+  };
+  A._LineSplitIterator.prototype = {
+    moveNext$0() {
+      var i, t1, t2, t3, i0, char, eolLength, t4, _this = this;
+      _this._convert$_current = null;
+      i = _this._lineStart = _this._convert$_start;
+      _this._lineEnd = -1;
+      for (t1 = _this._end, t2 = _this._convert$_source, t3 = t2.length, i0 = i; i0 < t1; ++i0) {
+        if (!(i0 >= 0 && i0 < t3))
+          return A.ioore(t2, i0);
+        char = t2.charCodeAt(i0);
+        if (char !== 13) {
+          if (char !== 10)
+            continue;
+          eolLength = 1;
+        } else {
+          t4 = i0 + 1;
+          if (t4 < t1) {
+            if (!(t4 < t3))
+              return A.ioore(t2, t4);
+            t1 = t2.charCodeAt(t4) === 10;
+          } else
+            t1 = false;
+          eolLength = t1 ? 2 : 1;
+        }
+        _this._lineEnd = i0;
+        _this._convert$_start = i0 + eolLength;
+        return true;
+      }
+      if (i < t1) {
+        _this._convert$_start = _this._lineEnd = t1;
+        return true;
+      }
+      _this._convert$_start = t1;
+      return false;
+    },
+    get$current(_) {
+      var _this = this,
+        t1 = _this._convert$_current;
+      if (t1 == null) {
+        t1 = _this._lineEnd;
+        t1 = _this._convert$_current = t1 >= 0 ? B.JSString_methods.substring$2(_this._convert$_source, _this._lineStart, t1) : A.throwExpression(A.StateError$("No element"));
+      }
+      return t1;
+    },
+    $isIterator: 1
+  };
+  A.Utf8Codec.prototype = {
+    decode$1(_, codeUnits) {
+      type$.List_int._as(codeUnits);
+      return B.Utf8Decoder_false.convert$1(codeUnits);
     }
   };
   A.Utf8Encoder.prototype = {
@@ -11135,6 +12159,11 @@
         throw A.wrapException(B.C_IntegerDivisionByZeroException);
       return this._div$1(other);
     },
+    remainder$1(_, other) {
+      if (other._used === 0)
+        throw A.wrapException(B.C_IntegerDivisionByZeroException);
+      return this._rem$1(other);
+    },
     $mod(_, other) {
       var result;
       if (other._used === 0)
@@ -11217,6 +12246,11 @@
         return _this._isNegative ? _this.$negate(0) : _this;
       return A._BigIntImpl__binaryGcd(_this, other, false);
     },
+    toSigned$1(_, width) {
+      var t1 = $.$get$_BigIntImpl_one(),
+        signMask = t1.$shl(0, width - 1);
+      return this.$and(0, signMask.$sub(0, t1)).$sub(0, this.$and(0, signMask));
+    },
     toInt$0(_) {
       var i, t1, t2, result;
       for (i = this._used - 1, t1 = this._digits, t2 = t1.length, result = 0; i >= 0; --i) {
@@ -11277,7 +12311,7 @@
       hash = hash + ((hash & 524287) << 10) & 536870911;
       return hash ^ hash >>> 6;
     },
-    $signature: 174
+    $signature: 24
   };
   A._BigIntImpl_hashCode_finish.prototype = {
     call$1(hash) {
@@ -11285,7 +12319,7 @@
       hash ^= hash >>> 11;
       return hash + ((hash & 16383) << 15) & 536870911;
     },
-    $signature: 11
+    $signature: 73
   };
   A._BigIntClassic.prototype = {
     convert$2(x, resultDigits) {
@@ -11350,17 +12384,18 @@
   };
   A.DateTime.prototype = {
     $eq(_, other) {
-      var t1;
       if (other == null)
         return false;
-      t1 = false;
-      if (other instanceof A.DateTime)
-        if (this._core$_value === other._core$_value)
-          t1 = this._microsecond === other._microsecond;
-      return t1;
+      return other instanceof A.DateTime && this._core$_value === other._core$_value && this._microsecond === other._microsecond && this.isUtc === other.isUtc;
     },
     get$hashCode(_) {
       return A.Object_hash(this._core$_value, this._microsecond, B.C_SentinelValue, B.C_SentinelValue);
+    },
+    toUtc$0() {
+      var _this = this;
+      if (_this.isUtc)
+        return _this;
+      return new A.DateTime(_this._core$_value, _this._microsecond, true);
     },
     toString$0(_) {
       var _this = this,
@@ -11373,8 +12408,37 @@
         ms = A.DateTime__threeDigits(A.Primitives_getMilliseconds(_this)),
         t1 = _this._microsecond,
         us = t1 === 0 ? "" : A.DateTime__threeDigits(t1);
-      return y + "-" + m + "-" + d + " " + h + ":" + min + ":" + sec + "." + ms + us + "Z";
+      t1 = y + "-" + m;
+      if (_this.isUtc)
+        return t1 + "-" + d + " " + h + ":" + min + ":" + sec + "." + ms + us + "Z";
+      else
+        return t1 + "-" + d + " " + h + ":" + min + ":" + sec + "." + ms + us;
     }
+  };
+  A.DateTime_parse_parseIntOrZero.prototype = {
+    call$1(matched) {
+      if (matched == null)
+        return 0;
+      return A.int_parse(matched, null);
+    },
+    $signature: 7
+  };
+  A.DateTime_parse_parseMilliAndMicroseconds.prototype = {
+    call$1(matched) {
+      var t1, result, i;
+      if (matched == null)
+        return 0;
+      for (t1 = matched.length, result = 0, i = 0; i < 6; ++i) {
+        result *= 10;
+        if (i < t1) {
+          if (!(i < t1))
+            return A.ioore(matched, i);
+          result += matched.charCodeAt(i) ^ 48;
+        }
+      }
+      return result;
+    },
+    $signature: 7
   };
   A._Enum.prototype = {
     toString$0(_) {
@@ -11710,6 +12774,11 @@
   A.DataTransferItemList.prototype = {
     get$length(receiver) {
       return receiver.length;
+    },
+    $index(receiver, index) {
+      var t1 = receiver[A._asInt(index)];
+      t1.toString;
+      return t1;
     }
   };
   A.DedicatedWorkerGlobalScope.prototype = {
@@ -11733,8 +12802,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -11752,6 +12823,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -11821,8 +12893,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -11840,6 +12914,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -11878,8 +12953,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -11897,6 +12974,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1,
@@ -11927,8 +13005,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -11946,6 +13026,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12069,8 +13150,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12088,6 +13171,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12106,8 +13190,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12125,6 +13211,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12142,8 +13229,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12161,6 +13250,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12227,8 +13317,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12246,6 +13338,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12258,8 +13351,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12277,6 +13372,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12328,7 +13424,7 @@
     call$2(k, v) {
       return B.JSArray_methods.add$1(this.keys, k);
     },
-    $signature: 13
+    $signature: 14
   };
   A.StyleSheet.prototype = {$isStyleSheet: 1};
   A.TextTrack.prototype = {$isTextTrack: 1};
@@ -12340,8 +13436,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12359,6 +13457,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12370,8 +13469,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12389,6 +13490,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12408,8 +13510,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12427,6 +13531,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12456,8 +13561,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12475,6 +13582,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12558,8 +13666,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12575,6 +13685,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12586,8 +13697,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12605,6 +13718,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12616,8 +13730,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12635,6 +13751,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12646,8 +13763,10 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length,
-        t2 = index >>> 0 !== index || index >= t1;
+      var t1, t2;
+      A._asInt(index);
+      t1 = receiver.length;
+      t2 = index >>> 0 !== index || index >= t1;
       t2.toString;
       if (t2)
         throw A.wrapException(A.IndexError$withLength(index, t1, receiver, null));
@@ -12665,6 +13784,7 @@
       return receiver[index];
     },
     $isJSIndexable: 1,
+    $isEfficientLengthIterable: 1,
     $isJavaScriptIndexingBehavior: 1,
     $isIterable: 1,
     $isList: 1
@@ -12676,7 +13796,7 @@
     call$1(e) {
       return this.onData.call$1(type$.Event._as(e));
     },
-    $signature: 14
+    $signature: 15
   };
   A.ImmutableListMixin.prototype = {
     get$iterator(receiver) {
@@ -12707,7 +13827,8 @@
     get$current(_) {
       var t1 = this._html$_current;
       return t1 == null ? this.$ti._precomputed1._as(t1) : t1;
-    }
+    },
+    $isIterator: 1
   };
   A._CssStyleDeclaration_JavaScriptObject_CssStyleDeclarationBase.prototype = {};
   A._DomRectList_JavaScriptObject_ListMixin.prototype = {};
@@ -12843,13 +13964,13 @@
     call$2(key, value) {
       this._box_0.copy[key] = this.$this.walk$1(value);
     },
-    $signature: 15
+    $signature: 16
   };
   A._StructuredClone_walk_closure0.prototype = {
     call$2(key, value) {
       this._box_1.copy[key] = this.$this.walk$1(value);
     },
-    $signature: 16
+    $signature: 17
   };
   A._AcceptStructuredClone.prototype = {
     findSlot$1(value) {
@@ -12939,7 +14060,7 @@
       this.map.$indexSet(0, key, t1);
       return t1;
     },
-    $signature: 17
+    $signature: 18
   };
   A._StructuredCloneDart2Js.prototype = {
     forEachObjectKey$2(object, action) {
@@ -12972,7 +14093,7 @@
       t1._asyncComplete$1(t2._eval$1("1/")._as(r));
       return null;
     },
-    $signature: 7
+    $signature: 8
   };
   A.promiseToFuture_closure0.prototype = {
     call$1(e) {
@@ -12980,7 +14101,7 @@
         return this.completer.completeError$1(new A.NullRejectionException(e === undefined));
       return this.completer.completeError$1(e);
     },
-    $signature: 7
+    $signature: 8
   };
   A.NullRejectionException.prototype = {
     toString$0(_) {
@@ -13030,7 +14151,9 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length;
+      var t1;
+      A._asInt(index);
+      t1 = receiver.length;
       t1.toString;
       t1 = index >>> 0 !== index || index >= t1;
       t1.toString;
@@ -13047,6 +14170,7 @@
     elementAt$1(receiver, index) {
       return this.$index(receiver, index);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -13058,7 +14182,9 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length;
+      var t1;
+      A._asInt(index);
+      t1 = receiver.length;
       t1.toString;
       t1 = index >>> 0 !== index || index >= t1;
       t1.toString;
@@ -13075,6 +14201,7 @@
     elementAt$1(receiver, index) {
       return this.$index(receiver, index);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -13090,7 +14217,9 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length;
+      var t1;
+      A._asInt(index);
+      t1 = receiver.length;
       t1.toString;
       t1 = index >>> 0 !== index || index >= t1;
       t1.toString;
@@ -13107,6 +14236,7 @@
     elementAt$1(receiver, index) {
       return this.$index(receiver, index);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -13118,7 +14248,9 @@
       return t1;
     },
     $index(receiver, index) {
-      var t1 = receiver.length;
+      var t1;
+      A._asInt(index);
+      t1 = receiver.length;
       t1.toString;
       t1 = index >>> 0 !== index || index >= t1;
       t1.toString;
@@ -13135,6 +14267,7 @@
     elementAt$1(receiver, index) {
       return this.$index(receiver, index);
     },
+    $isEfficientLengthIterable: 1,
     $isIterable: 1,
     $isList: 1
   };
@@ -13212,6 +14345,18 @@
     }
   };
   A._AudioParamMap_JavaScriptObject_MapMixin.prototype = {};
+  A.CryptoUtils_getBytesFromPEMString_closure.prototype = {
+    call$1(line) {
+      return B.JSString_methods.trim$0(A._asString(line));
+    },
+    $signature: 9
+  };
+  A.CryptoUtils_getBytesFromPEMString_closure0.prototype = {
+    call$1(line) {
+      return A._asString(line).length !== 0;
+    },
+    $signature: 21
+  };
   A.StreamCipherAsBlockCipher.prototype = {
     reset$0(_) {
       this.streamCipher.reset$0(0);
@@ -13252,11 +14397,13 @@
       return (t1.modulus.get$hashCode(0) + t1.exponent.get$hashCode(0) ^ t2.modulus.get$hashCode(0) + t2.exponent.get$hashCode(0)) >>> 0;
     }
   };
+  A.AsymmetricKeyParameter.prototype = {$isCipherParameters: 1};
   A.CipherParameters.prototype = {};
   A.KeyGeneratorParameters.prototype = {$isCipherParameters: 1};
   A.KeyParameter.prototype = {};
   A.PaddedBlockCipherParameters.prototype = {$isCipherParameters: 1};
   A.ParametersWithIV.prototype = {$isCipherParameters: 1};
+  A.PrivateKeyParameter.prototype = {};
   A.RegistryFactoryException.prototype = {
     toString$0(_) {
       return "RegistryFactoryException: " + this.message;
@@ -13322,7 +14469,184 @@
       return this.encode$1$encodingRule(B.ASN1EncodingRule_0);
     }
   };
+  A.ASN1Parser.prototype = {
+    nextObject$0() {
+      var tag, $length, valueStartPosition, isIndefiniteLength, length0, subBytes, obj, t4, _this = this,
+        t1 = _this.bytes,
+        t2 = _this._asn1_parser$_position,
+        t3 = t1.length;
+      if (!(t2 >= 0 && t2 < t3))
+        return A.ioore(t1, t2);
+      tag = t1[t2];
+      $length = A.ASN1Utils_decodeLength(B.NativeUint8List_methods.sublist$1(t1, t2));
+      valueStartPosition = A.ASN1Utils_calculateValueStartPosition(B.NativeUint8List_methods.sublist$1(t1, _this._asn1_parser$_position));
+      isIndefiniteLength = $length === -1;
+      if (isIndefiniteLength)
+        $length = A.ASN1Utils_calculateIndefiniteLength(t1, _this._asn1_parser$_position) + 2;
+      else {
+        length0 = t3 - _this._asn1_parser$_position;
+        $length += valueStartPosition;
+        $length = length0 > $length ? $length : length0;
+      }
+      t2 = _this._asn1_parser$_position;
+      t3 = t1.byteOffset;
+      subBytes = J.asUint8List$2$x(B.NativeUint8List_methods.get$buffer(t1), t2 + t3, $length);
+      if ((tag >>> 5 & 1) === 1)
+        obj = _this._createConstructed$2(tag, subBytes);
+      else
+        obj = (tag & 192) === 0 ? _this._createPrimitive$2(tag, subBytes) : A.ASN1Object$fromBytes(subBytes);
+      t1 = _this._asn1_parser$_position;
+      t2 = obj.valueStartPosition;
+      t3 = obj.valueByteLength;
+      t3.toString;
+      t4 = isIndefiniteLength ? 2 : 0;
+      _this._asn1_parser$_position = t1 + (t2 + t3) + t4;
+      return obj;
+    },
+    _createConstructed$2(tag, bytes) {
+      var t1;
+      switch (tag) {
+        case 48:
+          t1 = new A.ASN1Sequence(A._setArrayType([], type$.JSArray_ASN1Object), null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t1.ASN1Sequence$fromBytes$1(bytes);
+          return t1;
+        case 49:
+          t1 = new A.ASN1Set(null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t1.ASN1Set$fromBytes$1(bytes);
+          return t1;
+        case 54:
+          return A.ASN1IA5String$fromBytes(bytes);
+        case 35:
+          return A.ASN1BitString$fromBytes(bytes);
+        case 36:
+          return A.ASN1OctetString$fromBytes(bytes);
+        case 51:
+          return A.ASN1PrintableString$fromBytes(bytes);
+        case 52:
+          return A.ASN1TeletextString$fromBytes(bytes);
+        case 160:
+        case 161:
+        case 162:
+        case 163:
+        case 164:
+          return A.ASN1Object$fromBytes(bytes);
+        default:
+          throw A.wrapException(A.UnsupportedASN1TagException$(tag));
+      }
+    },
+    _createPrimitive$2(tag, bytes) {
+      var t1, t2, stringValue, year, month, day, hour, minute, second, t3, _null = null;
+      switch (tag) {
+        case 4:
+          return A.ASN1OctetString$fromBytes(bytes);
+        case 12:
+          t1 = new A.ASN1UTF8String(_null, _null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t1.ASN1UTF8String$fromBytes$1(bytes);
+          return t1;
+        case 22:
+          return A.ASN1IA5String$fromBytes(bytes);
+        case 2:
+        case 10:
+          t1 = new A.ASN1Integer(_null, _null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t2 = t1.valueBytes;
+          t2.toString;
+          t1.integer = A.decodeBigInt(t2);
+          return t1;
+        case 1:
+          t1 = new A.ASN1Boolean(_null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t2 = t1.valueBytes;
+          if (0 >= t2.length)
+            return A.ioore(t2, 0);
+          t1.boolValue = t2[0] === 255;
+          return t1;
+        case 6:
+          t1 = new A.ASN1ObjectIdentifier(_null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t1.ASN1ObjectIdentifier$fromBytes$1(bytes);
+          return t1;
+        case 3:
+          return A.ASN1BitString$fromBytes(bytes);
+        case 5:
+          t1 = new A.ASN1Null(_null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          return t1;
+        case 19:
+          return A.ASN1PrintableString$fromBytes(bytes);
+        case 23:
+          t1 = new A.ASN1UtcTime(_null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t2 = t1.valueBytes;
+          t2.toString;
+          stringValue = B.C_AsciiCodec.decode$1(0, t2);
+          stringValue = A.int_parse(B.JSString_methods.substring$2(stringValue, 0, 2), _null) > 75 ? "19" + stringValue : "20" + stringValue;
+          t1.time = A.DateTime_parse(B.JSString_methods.substring$2(stringValue, 0, 8) + "T" + B.JSString_methods.substring$1(stringValue, 8));
+          return t1;
+        case 20:
+          return A.ASN1TeletextString$fromBytes(bytes);
+        case 24:
+          t1 = new A.ASN1GeneralizedTime(_null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t2 = t1.valueBytes;
+          t2.toString;
+          stringValue = B.C_AsciiCodec.decode$1(0, t2);
+          year = B.JSString_methods.substring$2(stringValue, 0, 4);
+          month = B.JSString_methods.substring$2(stringValue, 4, 6);
+          day = B.JSString_methods.substring$2(stringValue, 6, 8);
+          hour = B.JSString_methods.substring$2(stringValue, 8, 10);
+          minute = B.JSString_methods.substring$2(stringValue, 10, 12);
+          second = B.JSString_methods.substring$2(stringValue, 12, 14);
+          t2 = stringValue.length;
+          t3 = year + "-" + month;
+          if (t2 > 14)
+            t1.dateTimeValue = A.DateTime_parse(t3 + "-" + day + " " + hour + ":" + minute + ":" + second + B.JSString_methods.substring$2(stringValue, 14, t2));
+          else
+            t1.dateTimeValue = A.DateTime_parse(t3 + "-" + day + " " + hour + ":" + minute + ":" + second);
+          return t1;
+        case 30:
+          t1 = new A.ASN1BMPString(_null, _null, bytes);
+          t1.ASN1Object$fromBytes$1(bytes);
+          t1.ASN1BMPString$fromBytes$1(bytes);
+          return t1;
+        default:
+          throw A.wrapException(A.UnsupportedASN1TagException$(tag));
+      }
+    }
+  };
   A.ASN1BitString.prototype = {
+    ASN1BitString$fromBytes$1(bytes) {
+      var parser, t2, bitString, t3, t4, _this = this,
+        t1 = _this.encodedBytes;
+      if (0 >= t1.length)
+        return A.ioore(t1, 0);
+      if ((t1[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        _this.stringValues = A._setArrayType([], type$.JSArray_int);
+        for (t1 = t1.length, t2 = type$.ASN1BitString; parser._asn1_parser$_position < t1;) {
+          bitString = t2._as(parser.nextObject$0());
+          t3 = _this.stringValues;
+          t3.toString;
+          t4 = bitString.stringValues;
+          t4.toString;
+          J.addAll$1$ax(t3, t4);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, bitString);
+        }
+      } else {
+        t1 = _this.valueBytes;
+        if (0 >= t1.length)
+          return A.ioore(t1, 0);
+        _this.unusedbits = t1[0];
+        _this.stringValues = B.NativeUint8List_methods.sublist$1(t1, 1);
+      }
+    },
     encode$0() {
       var b, t1, t2, i, _i, t3, i0, _this = this;
       switch (B.ASN1EncodingRule_0) {
@@ -13330,8 +14654,14 @@
         case B.ASN1EncodingRule_0:
         case B.ASN1EncodingRule_1:
           b = A._setArrayType([], type$.JSArray_int);
-          B.JSArray_methods.add$1(b, 0);
-          B.JSArray_methods.addAll$1(b, _this.stringValues);
+          t1 = _this.unusedbits;
+          if (t1 != null)
+            B.JSArray_methods.add$1(b, t1);
+          else
+            B.JSArray_methods.add$1(b, 0);
+          t1 = _this.stringValues;
+          t1.toString;
+          B.JSArray_methods.addAll$1(b, t1);
           _this.valueBytes = new Uint8Array(A._ensureNativeList(b));
           break;
         case B.ASN1EncodingRule_4:
@@ -13365,27 +14695,258 @@
       return l;
     }
   };
-  A.ASN1Integer.prototype = {
-    encode$0() {
-      var t2, _this = this,
-        t1 = _this.integer;
-      if (t1.get$bitLength(0) === 0) {
-        t1 = t1.compareTo$1(0, A._BigIntImpl__BigIntImpl$from(-1));
-        t2 = type$.JSArray_int;
-        if (t1 === 0) {
-          t1 = new Uint8Array(A._ensureNativeList(A._setArrayType([255], t2)));
-          _this.valueBytes = t1;
-        } else {
-          t1 = new Uint8Array(A._ensureNativeList(A._setArrayType([0], t2)));
-          _this.valueBytes = t1;
+  A.ASN1BMPString.prototype = {
+    ASN1BMPString$fromBytes$1(encodedBytes) {
+      var t1, parser, t2, t3, bmpString, t4, utf16CodeUnits, i, highByte, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        for (t1 = t1.length, t2 = type$.ASN1BMPString, t3 = ""; parser._asn1_parser$_position < t1;) {
+          bmpString = t2._as(parser.nextObject$0());
+          t3 += A.S(bmpString.stringValue);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, bmpString);
         }
-      } else
-        t1 = _this.valueBytes = A.encodeBigInt(t1);
+        _this.stringValue = t3.charCodeAt(0) == 0 ? t3 : t3;
+      } else {
+        utf16CodeUnits = A._setArrayType([], type$.JSArray_int);
+        for (i = 0; t1 = _this.valueBytes, t2 = t1.length, i < t2; i += 2) {
+          highByte = t1[i];
+          t3 = i + 1;
+          if (!(t3 < t2))
+            return A.ioore(t1, t3);
+          B.JSArray_methods.add$1(utf16CodeUnits, (highByte << 8 | t1[t3]) >>> 0);
+        }
+        _this.stringValue = A.String_String$fromCharCodes(utf16CodeUnits, 0, null);
+      }
+    },
+    encode$0() {
+      var l, t1, t2, t3, i, _i, b, i0, _this = this;
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+        case B.ASN1EncodingRule_1:
+          l = A._setArrayType([], type$.JSArray_int);
+          t1 = _this.stringValue;
+          t1.toString;
+          t1 = new A.CodeUnits(t1);
+          t2 = type$.CodeUnits;
+          t1 = new A.ListIterator(t1, t1.get$length(0), t2._eval$1("ListIterator<ListBase.E>"));
+          t2 = t2._eval$1("ListBase.E");
+          for (; t1.moveNext$0();) {
+            t3 = t1.__internal$_current;
+            if (t3 == null)
+              t3 = t2._as(t3);
+            B.JSArray_methods.add$1(l, B.JSInt_methods._shrOtherPositive$1(t3, 8) & 255);
+            B.JSArray_methods.add$1(l, t3 & 255);
+          }
+          _this.valueBytes = new Uint8Array(A._ensureNativeList(l));
+          break;
+        case B.ASN1EncodingRule_4:
+        case B.ASN1EncodingRule_2:
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            t2 = new A.ASN1BMPString(_this.stringValue, 30, null);
+            t2.ASN1Object$1$tag(30);
+            B.JSArray_methods.add$1(t1, t2);
+          }
+          t1 = _this._asn1_bmp_string$_childLength$1$isIndefinite(false);
+          _this.valueByteLength = t1;
+          _this.valueBytes = new Uint8Array(t1);
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+          }
+          break;
+        case B.ASN1EncodingRule_3:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_bmp_string$_childLength$1$isIndefinite(isIndefinite) {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      if (isIndefinite)
+        return l + 2;
+      return l;
+    }
+  };
+  A.ASN1Boolean.prototype = {
+    encode$0() {
+      var t1, _this = this;
+      _this.valueByteLength = 1;
+      t1 = type$.JSArray_int;
+      _this.valueBytes = _this.boolValue === true ? new Uint8Array(A._ensureNativeList(A._setArrayType([255], t1))) : new Uint8Array(A._ensureNativeList(A._setArrayType([0], t1)));
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    }
+  };
+  A.ASN1GeneralizedTime.prototype = {
+    encode$0() {
+      var _this = this,
+        utc = _this.dateTimeValue.toUtc$0(),
+        t1 = B.C_AsciiEncoder.convert$1(B.JSInt_methods.toString$0(A.Primitives_getYear(utc)) + B.JSInt_methods.toString$0(A.Primitives_getMonth(utc)) + B.JSInt_methods.toString$0(A.Primitives_getDay(utc)) + B.JSInt_methods.toString$0(A.Primitives_getHours(utc)) + B.JSInt_methods.toString$0(A.Primitives_getMinutes(utc)) + B.JSInt_methods.toString$0(A.Primitives_getSeconds(utc)) + "Z");
+      _this.valueBytes = t1;
       _this.valueByteLength = t1.length;
       return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
     }
   };
+  A.ASN1IA5String.prototype = {
+    ASN1IA5String$fromBytes$1(encodedBytes) {
+      var t1, parser, t2, t3, ia5String, t4, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        for (t1 = t1.length, t2 = type$.ASN1IA5String, t3 = ""; parser._asn1_parser$_position < t1;) {
+          ia5String = t2._as(parser.nextObject$0());
+          t3 += A.S(ia5String.stringValue);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, ia5String);
+        }
+        _this.stringValue = t3.charCodeAt(0) == 0 ? t3 : t3;
+      } else {
+        t1 = _this.valueBytes;
+        t1.toString;
+        _this.stringValue = B.C_AsciiCodec.decode$1(0, t1);
+      }
+    },
+    encode$0() {
+      var t1, octets, t2, i, _i, b, t3, i0, _this = this;
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+        case B.ASN1EncodingRule_1:
+          t1 = _this.stringValue;
+          t1.toString;
+          octets = B.C_AsciiEncoder.convert$1(t1);
+          _this.valueByteLength = octets.length;
+          _this.valueBytes = new Uint8Array(A._ensureNativeList(octets));
+          break;
+        case B.ASN1EncodingRule_4:
+        case B.ASN1EncodingRule_2:
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            t2 = new A.ASN1IA5String(_this.stringValue, 22, null);
+            t2.ASN1Object$1$tag(22);
+            B.JSArray_methods.add$1(t1, t2);
+          }
+          t1 = _this._asn1_ia5_string$_childLength$1$isIndefinite(false);
+          _this.valueByteLength = t1;
+          _this.valueBytes = new Uint8Array(t1);
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+          }
+          break;
+        case B.ASN1EncodingRule_3:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_ia5_string$_childLength$1$isIndefinite(isIndefinite) {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      if (isIndefinite)
+        return l + 2;
+      return l;
+    }
+  };
+  A.ASN1Integer.prototype = {
+    encode$0() {
+      var t1, _this = this;
+      if (_this.integer.get$bitLength(0) === 0) {
+        t1 = type$.JSArray_int;
+        if (J.$eq$(_this.integer, A._BigIntImpl__BigIntImpl$from(-1))) {
+          t1 = new Uint8Array(A._ensureNativeList(A._setArrayType([255], t1)));
+          _this.valueBytes = t1;
+        } else {
+          t1 = new Uint8Array(A._ensureNativeList(A._setArrayType([0], t1)));
+          _this.valueBytes = t1;
+        }
+      } else
+        t1 = _this.valueBytes = A.encodeBigInt(_this.integer);
+      _this.valueByteLength = t1.length;
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    }
+  };
+  A.ASN1Null.prototype = {
+    encode$0() {
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+          var t1 = this.tag;
+          t1.toString;
+          return new Uint8Array(A._ensureNativeList(A._setArrayType([t1, 0], type$.JSArray_int)));
+        case B.ASN1EncodingRule_1:
+          t1 = this.tag;
+          t1.toString;
+          return new Uint8Array(A._ensureNativeList(A._setArrayType([t1, 129, 0], type$.JSArray_int)));
+        default:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+    }
+  };
   A.ASN1ObjectIdentifier.prototype = {
+    ASN1ObjectIdentifier$fromBytes$1(encodedBytes) {
+      var t1, t2, value, first, bigValue, _i, b, value0, truncated, t3, identifier, _this = this,
+        list = A._setArrayType([], type$.JSArray_int),
+        sb = new A.StringBuffer("");
+      for (t1 = _this.valueBytes, t2 = t1.length, value = 0, first = true, bigValue = null, _i = 0; _i < t2; ++_i) {
+        b = t1[_i] & 255;
+        value0 = 0;
+        if (value < 36028797018963968) {
+          value = value * 128 + (b & 127);
+          if ((b & 128) === 0) {
+            if (first) {
+              truncated = B.JSInt_methods._tdivFast$1(value, 40);
+              if (truncated < 2) {
+                B.JSArray_methods.add$1(list, truncated);
+                sb._contents += "" + truncated;
+                value -= truncated * 40;
+              } else {
+                B.JSArray_methods.add$1(list, 2);
+                sb._contents += "2";
+                value -= 80;
+              }
+              first = false;
+            }
+            B.JSArray_methods.add$1(list, value);
+            sb._contents += "." + value;
+            value = value0;
+          }
+        } else {
+          bigValue = (bigValue == null ? A._BigIntImpl__BigIntImpl$from(value) : bigValue).$shl(0, 7).$or(0, A._BigIntImpl__BigIntImpl$from(b & 127));
+          if ((b & 128) === 0) {
+            t3 = "." + bigValue.toString$0(0);
+            sb._contents += t3;
+            value = value0;
+            bigValue = null;
+          }
+        }
+      }
+      t1 = sb._contents;
+      _this.objectIdentifierAsString = t1.charCodeAt(0) == 0 ? t1 : t1;
+      _this.objectIdentifier = new Uint8Array(A._ensureNativeList(list));
+      identifier = A.ObjectIdentifiers_getIdentifierByIdentifier(_this.objectIdentifierAsString);
+      if (identifier != null)
+        A._asStringQ(J.$index$asx(identifier, "readableName"));
+    },
     encode$0() {
       var t2, flags, ci, position, v, first, remainder, _this = this,
         oi = A._setArrayType([], type$.JSArray_int),
@@ -13428,8 +14989,30 @@
     }
   };
   A.ASN1OctetString.prototype = {
+    ASN1OctetString$fromBytes$1(encodedBytes) {
+      var t1, parser, bytes, t2, octetString, t3, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        bytes = A._setArrayType([], type$.JSArray_int);
+        for (t1 = t1.length, t2 = type$.ASN1OctetString; parser._asn1_parser$_position < t1;) {
+          octetString = t2._as(parser.nextObject$0());
+          t3 = octetString.octets;
+          t3.toString;
+          B.JSArray_methods.addAll$1(bytes, t3);
+          t3 = _this.elements;
+          t3.toString;
+          B.JSArray_methods.add$1(t3, octetString);
+        }
+        _this.octets = new Uint8Array(A._ensureNativeList(bytes));
+      } else
+        _this.octets = _this.valueBytes;
+    },
     encode$0() {
-      var t1, i, b, t2, _this = this;
+      var t1, t2, i, _i, b, t3, i0, _this = this;
       switch (B.ASN1EncodingRule_0) {
         case B.ASN1EncodingRule_0:
         case B.ASN1EncodingRule_1:
@@ -13439,18 +15022,21 @@
           break;
         case B.ASN1EncodingRule_2:
         case B.ASN1EncodingRule_4:
-          i = _this.valueByteLength = 0;
-          null.toString;
-          null.add$1(0, A.ASN1OctetString$(_this.octets));
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            B.JSArray_methods.add$1(t1, A.ASN1OctetString$(_this.octets));
+          }
           t1 = _this._asn1_octet_string$_childLength$1$isIndefinite(false);
           _this.valueByteLength = t1;
           _this.valueBytes = new Uint8Array(t1);
-          for (t1 = null.get$iterator(null); t1.moveNext$0();) {
-            b = t1.get$current(t1).encode$0();
-            t2 = _this.valueBytes;
-            t2.toString;
-            B.NativeUint8List_methods.setRange$3(t2, i, B.JSInt_methods.$add(i, b.get$length(b)), b);
-            i = B.JSInt_methods.$add(i, b.get$length(b));
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
           }
           break;
         case B.ASN1EncodingRule_3:
@@ -13459,17 +15045,95 @@
       return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
     },
     _asn1_octet_string$_childLength$1$isIndefinite(isIndefinite) {
-      var t1, l, t2;
-      for (t1 = null.get$iterator(null), l = 0; t1.moveNext$0();) {
-        t2 = t1.get$current(t1).encode$0();
-        l = B.JSInt_methods.$add(l, t2.get$length(t2));
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      if (isIndefinite)
+        return l + 2;
+      return l;
+    }
+  };
+  A.ASN1PrintableString.prototype = {
+    ASN1PrintableString$fromBytes$1(encodedBytes) {
+      var t1, parser, t2, t3, printableString, t4, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        for (t1 = t1.length, t2 = type$.ASN1PrintableString, t3 = ""; parser._asn1_parser$_position < t1;) {
+          printableString = t2._as(parser.nextObject$0());
+          t3 += A.S(printableString.stringValue);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, printableString);
+        }
+        _this.stringValue = t3.charCodeAt(0) == 0 ? t3 : t3;
+      } else {
+        t1 = _this.valueBytes;
+        t1.toString;
+        _this.stringValue = B.C_AsciiCodec.decode$1(0, t1);
       }
+    },
+    encode$0() {
+      var t1, octets, t2, i, _i, b, t3, i0, _this = this;
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+        case B.ASN1EncodingRule_1:
+          t1 = _this.stringValue;
+          t1.toString;
+          octets = B.C_AsciiEncoder.convert$1(t1);
+          _this.valueByteLength = octets.length;
+          _this.valueBytes = new Uint8Array(A._ensureNativeList(octets));
+          break;
+        case B.ASN1EncodingRule_4:
+        case B.ASN1EncodingRule_2:
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            t2 = new A.ASN1PrintableString(_this.stringValue, 19, null);
+            t2.ASN1Object$1$tag(19);
+            B.JSArray_methods.add$1(t1, t2);
+          }
+          t1 = _this._asn1_printable_string$_childLength$1$isIndefinite(false);
+          _this.valueByteLength = t1;
+          _this.valueBytes = new Uint8Array(t1);
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+          }
+          break;
+        case B.ASN1EncodingRule_3:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_printable_string$_childLength$1$isIndefinite(isIndefinite) {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
       if (isIndefinite)
         return l + 2;
       return l;
     }
   };
   A.ASN1Sequence.prototype = {
+    ASN1Sequence$fromBytes$1(encodedBytes) {
+      var t1, parser, t2;
+      this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+      t1 = this.valueBytes;
+      parser = new A.ASN1Parser(t1);
+      for (t1 = t1.length; parser._asn1_parser$_position < t1;) {
+        t2 = this.elements;
+        t2.toString;
+        B.JSArray_methods.add$1(t2, parser.nextObject$0());
+      }
+    },
     encode$0() {
       var t1, t2, i, _i, b, t3, i0, _this = this;
       _this.valueBytes = new Uint8Array(0);
@@ -13499,9 +15163,199 @@
       B.JSArray_methods.add$1(t1 == null ? this.elements = A._setArrayType([], type$.JSArray_ASN1Object) : t1, obj);
     }
   };
+  A.ASN1Set.prototype = {
+    ASN1Set$fromBytes$1(encodedBytes) {
+      var t1, parser, t2;
+      this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+      t1 = this.valueBytes;
+      parser = new A.ASN1Parser(t1);
+      for (t1 = t1.length; parser._asn1_parser$_position < t1;) {
+        t2 = this.elements;
+        t2.toString;
+        B.JSArray_methods.add$1(t2, parser.nextObject$0());
+      }
+    },
+    encode$0() {
+      var t1, t2, i, _i, b, t3, i0, _this = this;
+      _this.valueBytes = new Uint8Array(0);
+      _this.valueByteLength = 0;
+      if (_this.elements != null) {
+        t1 = _this._asn1_set$_childLength$0();
+        _this.valueByteLength = t1;
+        _this.valueBytes = new Uint8Array(t1);
+        for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+          b = t1[_i].encode$0();
+          t3 = _this.valueBytes;
+          t3.toString;
+          i0 = i + b.length;
+          B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+        }
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_set$_childLength$0() {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      return l;
+    }
+  };
+  A.ASN1TeletextString.prototype = {
+    ASN1TeletextString$fromBytes$1(encodedBytes) {
+      var t1, parser, t2, t3, printableString, t4, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        for (t1 = t1.length, t2 = type$.ASN1TeletextString, t3 = ""; parser._asn1_parser$_position < t1;) {
+          printableString = t2._as(parser.nextObject$0());
+          t3 += A.S(printableString.stringValue);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, printableString);
+        }
+        _this.stringValue = t3.charCodeAt(0) == 0 ? t3 : t3;
+      } else {
+        t1 = _this.valueBytes;
+        t1.toString;
+        _this.stringValue = B.C_AsciiCodec.decode$1(0, t1);
+      }
+    },
+    encode$0() {
+      var t1, octets, t2, i, _i, b, t3, i0, _this = this;
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+        case B.ASN1EncodingRule_1:
+          t1 = _this.stringValue;
+          t1.toString;
+          octets = B.C_AsciiEncoder.convert$1(t1);
+          _this.valueByteLength = octets.length;
+          _this.valueBytes = new Uint8Array(A._ensureNativeList(octets));
+          break;
+        case B.ASN1EncodingRule_4:
+        case B.ASN1EncodingRule_2:
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            t2 = new A.ASN1TeletextString(_this.stringValue, 20, null);
+            t2.ASN1Object$1$tag(20);
+            B.JSArray_methods.add$1(t1, t2);
+          }
+          t1 = _this._asn1_teletext_string$_childLength$1$isIndefinite(false);
+          _this.valueByteLength = t1;
+          _this.valueBytes = new Uint8Array(t1);
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+          }
+          break;
+        case B.ASN1EncodingRule_3:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_teletext_string$_childLength$1$isIndefinite(isIndefinite) {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      if (isIndefinite)
+        return l + 2;
+      return l;
+    }
+  };
+  A.ASN1UtcTime.prototype = {
+    encode$0() {
+      var _this = this, _s1_ = "0",
+        utc = _this.time.toUtc$0(),
+        t1 = B.C_AsciiEncoder.convert$1(B.JSString_methods.padLeft$2(B.JSString_methods.substring$1(B.JSInt_methods.toString$0(A.Primitives_getYear(utc)), 2), 2, _s1_) + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(A.Primitives_getMonth(utc)), 2, _s1_) + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(A.Primitives_getDay(utc)), 2, _s1_) + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(A.Primitives_getHours(utc)), 2, _s1_) + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(A.Primitives_getMinutes(utc)), 2, _s1_) + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(A.Primitives_getSeconds(utc)), 2, _s1_) + "Z");
+      _this.valueBytes = t1;
+      _this.valueByteLength = t1.length;
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    }
+  };
+  A.ASN1UTF8String.prototype = {
+    ASN1UTF8String$fromBytes$1(encodedBytes) {
+      var t1, parser, t2, t3, utf8String, t4, _this = this;
+      if (0 >= encodedBytes.length)
+        return A.ioore(encodedBytes, 0);
+      if ((encodedBytes[0] >>> 5 & 1) === 1) {
+        _this.elements = A._setArrayType([], type$.JSArray_ASN1Object);
+        t1 = _this.valueBytes;
+        parser = new A.ASN1Parser(t1);
+        for (t1 = t1.length, t2 = type$.ASN1UTF8String, t3 = ""; parser._asn1_parser$_position < t1;) {
+          utf8String = t2._as(parser.nextObject$0());
+          t3 += A.S(utf8String.utf8StringValue);
+          t4 = _this.elements;
+          t4.toString;
+          B.JSArray_methods.add$1(t4, utf8String);
+        }
+        _this.utf8StringValue = t3.charCodeAt(0) == 0 ? t3 : t3;
+      } else {
+        t1 = _this.valueBytes;
+        t1.toString;
+        _this.utf8StringValue = B.C_Utf8Codec.decode$1(0, t1);
+      }
+    },
+    encode$0() {
+      var t1, octets, t2, i, _i, b, t3, i0, _this = this;
+      switch (B.ASN1EncodingRule_0) {
+        case B.ASN1EncodingRule_0:
+        case B.ASN1EncodingRule_1:
+          t1 = _this.utf8StringValue;
+          t1.toString;
+          octets = B.C_Utf8Encoder.convert$1(t1);
+          _this.valueByteLength = octets.length;
+          _this.valueBytes = new Uint8Array(A._ensureNativeList(octets));
+          break;
+        case B.ASN1EncodingRule_4:
+        case B.ASN1EncodingRule_2:
+          _this.valueByteLength = 0;
+          t1 = _this.elements;
+          if (t1 == null) {
+            t1.toString;
+            t2 = new A.ASN1UTF8String(_this.utf8StringValue, 12, null);
+            t2.ASN1Object$1$tag(12);
+            B.JSArray_methods.add$1(t1, t2);
+          }
+          t1 = _this._asn1_utf8_string$_childLength$1$isIndefinite(false);
+          _this.valueByteLength = t1;
+          _this.valueBytes = new Uint8Array(t1);
+          for (t1 = _this.elements, t2 = t1.length, i = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i, i = i0) {
+            b = t1[_i].encode$0();
+            t3 = _this.valueBytes;
+            t3.toString;
+            i0 = i + b.length;
+            B.NativeUint8List_methods.setRange$3(t3, i, i0, b);
+          }
+          break;
+        case B.ASN1EncodingRule_3:
+          throw A.wrapException(A.UnsupportedAsn1EncodingRuleException$(B.ASN1EncodingRule_0));
+      }
+      return _this.super$ASN1Object$encode(B.ASN1EncodingRule_0);
+    },
+    _asn1_utf8_string$_childLength$1$isIndefinite(isIndefinite) {
+      var t1, t2, l, _i;
+      for (t1 = this.elements, t2 = t1.length, l = 0, _i = 0; _i < t1.length; t1.length === t2 || (0, A.throwConcurrentModificationError)(t1), ++_i)
+        l += t1[_i].encode$0().length;
+      if (isIndefinite)
+        return l + 2;
+      return l;
+    }
+  };
   A.UnsupportedAsn1EncodingRuleException.prototype = {
     toString$0(_) {
       return "UnsupportedAsn1EncodingRuleException: Encoding " + this.rule.toString$0(0) + " is not supported by this ASN1Object.";
+    }
+  };
+  A.UnsupportedASN1TagException.prototype = {
+    toString$0(_) {
+      return "UnsupportedASN1TagException: Tag " + this.tag + " is not supported yet";
     }
   };
   A.UnsupportedObjectIdentifierException.prototype = {
@@ -13549,7 +15403,7 @@
       A._asString(_);
       return new A.OAEPEncoding_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 19
+    $signature: 22
   };
   A.OAEPEncoding_factoryConfig__closure.prototype = {
     call$0() {
@@ -13557,13 +15411,13 @@
       t1.toString;
       return A.OAEPEncoding_OAEPEncoding$withSHA1($.$get$registry().create$1$1(0, t1, type$.AsymmetricBlockCipher), null);
     },
-    $signature: 20
+    $signature: 23
   };
   A.OAEPEncoding_OAEPEncoding$withSHA1_closure.prototype = {
     call$0() {
       return A.SHA1Digest$();
     },
-    $signature: 8
+    $signature: 10
   };
   A.PKCS1Encoding.prototype = {};
   A.PKCS1Encoding_factoryConfig_closure.prototype = {
@@ -13571,7 +15425,7 @@
       A._asString(_);
       return new A.PKCS1Encoding_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 22
+    $signature: 25
   };
   A.PKCS1Encoding_factoryConfig__closure.prototype = {
     call$0() {
@@ -13579,14 +15433,86 @@
       t1.toString;
       return A.PKCS1Encoding$($.$get$registry().create$1$1(0, t1, type$.AsymmetricBlockCipher));
     },
-    $signature: 23
+    $signature: 26
   };
-  A.RSAEngine.prototype = {};
+  A.RSAEngine.prototype = {
+    get$inputBlockSize() {
+      var bitSize,
+        t1 = this._key;
+      if (t1 == null)
+        throw A.wrapException(A.StateError$("Input block size cannot be calculated until init() called"));
+      bitSize = t1.modulus.get$bitLength(0);
+      this.__RSAEngine__forEncryption_A === $ && A.throwLateFieldNI("_forEncryption");
+      t1 = B.JSInt_methods._tdivFast$1(bitSize + 7, 8);
+      return t1;
+    },
+    get$outputBlockSize() {
+      var bitSize,
+        t1 = this._key;
+      if (t1 == null)
+        throw A.wrapException(A.StateError$("Output block size cannot be calculated until init() called"));
+      bitSize = t1.modulus.get$bitLength(0);
+      this.__RSAEngine__forEncryption_A === $ && A.throwLateFieldNI("_forEncryption");
+      t1 = B.JSInt_methods._tdivFast$1(bitSize + 7, 8);
+      return t1 - 1;
+    },
+    processBlock$5(inp, inpOff, len, out, outOff) {
+      var res, _this = this,
+        inpLen = inp.length,
+        t1 = inpOff + len;
+      if (inpLen < t1)
+        A.throwExpression(A.ArgumentError$value(inpOff, "inpOff", "Not enough data for RSA cipher (length=" + len + ", available=" + inpLen + ")"));
+      if (_this.get$inputBlockSize() + 1 < len)
+        A.throwExpression(A.ArgumentError$value(len, "len", "Too large for maximum RSA cipher input block size (" + _this.get$inputBlockSize() + ")"));
+      res = A.decodeBigIntWithSign(1, B.NativeUint8List_methods.sublist$2(inp, inpOff, t1));
+      if (res.compareTo$1(0, _this._key.modulus) >= 0)
+        A.throwExpression(A.ArgumentError$("Input block too large for RSA key size", null));
+      return _this._convertOutput$3(_this._processBigInteger$1(res), out, outOff);
+    },
+    _convertOutput$3(result, out, outOff) {
+      var t1, len,
+        output = A.encodeBigInt(result);
+      this.__RSAEngine__forEncryption_A === $ && A.throwLateFieldNI("_forEncryption");
+      t1 = output.length;
+      if (0 >= t1)
+        return A.ioore(output, 0);
+      if (output[0] === 0) {
+        len = t1 - 1;
+        B.NativeUint8List_methods.setRange$3(out, outOff, outOff + len, B.NativeUint8List_methods.sublist$1(output, 1));
+        return len;
+      }
+      B.NativeUint8List_methods.setAll$2(out, outOff, output);
+      return output.length;
+    },
+    _processBigInteger$1(input) {
+      var t2, t3, t4, mP, mQ, h, _this = this,
+        t1 = _this._key;
+      if (t1 instanceof A.RSAPrivateKey) {
+        t2 = t1.p;
+        t2.toString;
+        t3 = input.remainder$1(0, t2);
+        t4 = _this.__RSAEngine__dP_A;
+        t4 === $ && A.throwLateFieldNI("_dP");
+        mP = t3.modPow$2(0, t4, t2);
+        t1 = t1.q;
+        t1.toString;
+        t4 = input.remainder$1(0, t1);
+        t3 = _this.__RSAEngine__dQ_A;
+        t3 === $ && A.throwLateFieldNI("_dQ");
+        mQ = t4.modPow$2(0, t3, t1);
+        h = mP.$sub(0, mQ);
+        t3 = _this.__RSAEngine__qInv_A;
+        t3 === $ && A.throwLateFieldNI("_qInv");
+        return h.$mul(0, t3).$mod(0, t2).$mul(0, t1).$add(0, mQ);
+      } else
+        return input.modPow$2(0, t1.exponent, t1.modulus);
+    }
+  };
   A.RSAEngine_factoryConfig_closure.prototype = {
     call$0() {
       return A.RSAEngine$();
     },
-    $signature: 24
+    $signature: 27
   };
   A.AESEngine.prototype = {
     _subWord$1(x) {
@@ -14116,7 +16042,7 @@
       var t1 = J.JSArray_JSArray$fixed(0, type$.int);
       return new A.AESEngine(t1);
     },
-    $signature: 25
+    $signature: 28
   };
   A.DesBase.prototype = {
     generateWorkingKey$2(encrypting, key) {
@@ -14403,7 +16329,7 @@
     call$0() {
       return new A.DESedeEngine();
     },
-    $signature: 26
+    $signature: 29
   };
   A.CBCBlockCipher.prototype = {
     get$blockSize() {
@@ -14497,7 +16423,7 @@
       A._asString(_);
       return new A.CBCBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 27
+    $signature: 30
   };
   A.CBCBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14505,7 +16431,7 @@
       t1.toString;
       return A.CBCBlockCipher$($.$get$registry().create$1$1(0, t1, type$.BlockCipher));
     },
-    $signature: 28
+    $signature: 31
   };
   A.CCMBlockCipher.prototype = {
     get$macSize() {
@@ -14558,7 +16484,7 @@
       A._asString(_);
       return new A.CCMBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 29
+    $signature: 32
   };
   A.CCMBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14573,7 +16499,7 @@
         A.throwExpression(A.ArgumentError$("CCM requires a block size of 16", null));
       return new A.CCMBlockCipher(new A._CopyingBytesBuilder(t1), new A._CopyingBytesBuilder(t1), underlying);
     },
-    $signature: 30
+    $signature: 33
   };
   A.CFBBlockCipher.prototype = {
     reset$0(_) {
@@ -14692,7 +16618,7 @@
       A._asString(_);
       return new A.CFBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 31
+    $signature: 34
   };
   A.CFBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14715,7 +16641,7 @@
       t1._cfbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 32
+    $signature: 35
   };
   A.CTRBlockCipher.prototype = {};
   A.CTRBlockCipher_factoryConfig_closure.prototype = {
@@ -14723,7 +16649,7 @@
       A._asString(_);
       return new A.CTRBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 33
+    $signature: 36
   };
   A.CTRBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14734,7 +16660,7 @@
       t1 = underlying.get$blockSize();
       return new A.CTRBlockCipher(A.CTRStreamCipher$(underlying), t1);
     },
-    $signature: 34
+    $signature: 37
   };
   A.ECBBlockCipher.prototype = {
     get$blockSize() {
@@ -14755,7 +16681,7 @@
       A._asString(_);
       return new A.ECBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 35
+    $signature: 38
   };
   A.ECBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14763,7 +16689,7 @@
       t1.toString;
       return new A.ECBBlockCipher($.$get$registry().create$1$1(0, t1, type$.BlockCipher));
     },
-    $signature: 36
+    $signature: 39
   };
   A.GCMBlockCipher.prototype = {
     init$2(forEncryption, params) {
@@ -14941,7 +16867,7 @@
       A._asString(_);
       return new A.GCMBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 37
+    $signature: 40
   };
   A.GCMBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -14953,7 +16879,7 @@
       t1[0] = 225;
       return new A.GCMBlockCipher(t1, underlying);
     },
-    $signature: 38
+    $signature: 41
   };
   A.GCTRBlockCipher.prototype = {
     get$blockSize() {
@@ -15057,7 +16983,7 @@
       A._asString(_);
       return new A.GCTRBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 39
+    $signature: 42
   };
   A.GCTRBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -15076,7 +17002,7 @@
       t1._gctr$_ofbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 40
+    $signature: 43
   };
   A.IGEBlockCipher.prototype = {
     get$blockSize() {
@@ -15208,7 +17134,7 @@
       A._asString(_);
       return new A.IGEBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 41
+    $signature: 44
   };
   A.IGEBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -15227,7 +17153,7 @@
       t1.__IGEBlockCipher__yPrev_A = new Uint8Array(t2);
       return t1;
     },
-    $signature: 42
+    $signature: 45
   };
   A.OFBBlockCipher.prototype = {
     reset$0(_) {
@@ -15305,7 +17231,7 @@
       A._asString(_);
       return new A.OFBBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 43
+    $signature: 46
   };
   A.OFBBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -15328,7 +17254,7 @@
       t1._ofbOutV = new Uint8Array(t2);
       return t1;
     },
-    $signature: 44
+    $signature: 47
   };
   A.SICBlockCipher.prototype = {};
   A.SICBlockCipher_factoryConfig_closure.prototype = {
@@ -15336,7 +17262,7 @@
       A._asString(_);
       return new A.SICBlockCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 45
+    $signature: 48
   };
   A.SICBlockCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -15347,7 +17273,7 @@
       t1 = underlying.get$blockSize();
       return new A.SICBlockCipher(A.SICStreamCipher$(underlying), t1);
     },
-    $signature: 46
+    $signature: 49
   };
   A.RC2Engine.prototype = {
     get$blockSize() {
@@ -15793,7 +17719,7 @@
     call$0() {
       return new A.RC2Engine();
     },
-    $signature: 47
+    $signature: 50
   };
   A.Blake2bDigest.prototype = {
     get$algorithmName() {
@@ -16017,7 +17943,7 @@
       t1 = _this._blake2b$_buffer;
       t1.toString;
       B.NativeUint8List_methods.fillRange$3(t1, 0, 128, 0);
-      t1 = _this._key;
+      t1 = _this._blake2b$_key;
       if (t1 != null) {
         t2 = _this._blake2b$_buffer;
         t2.toString;
@@ -16257,7 +18183,7 @@
     call$0() {
       return A.Blake2bDigest$(64);
     },
-    $signature: 48
+    $signature: 51
   };
   A.CSHAKEDigest.prototype = {
     CSHAKEDigest$3(bitLength, $N, $S) {
@@ -16319,7 +18245,7 @@
       A._asString(_);
       return new A.CSHAKEDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 49
+    $signature: 52
   };
   A.CSHAKEDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -16334,7 +18260,7 @@
       t1.CSHAKEDigest$3(bitLength, null, null);
       return t1;
     },
-    $signature: 50
+    $signature: 53
   };
   A.KeccakDigest.prototype = {
     KeccakDigest$1(bitLength) {
@@ -16370,7 +18296,7 @@
       A._asString(_);
       return new A.KeccakDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 51
+    $signature: 54
   };
   A.KeccakDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -16383,7 +18309,7 @@
       t1.KeccakDigest$1(bitLength);
       return t1;
     },
-    $signature: 52
+    $signature: 55
   };
   A.MD2Digest.prototype = {
     get$algorithmName() {
@@ -16501,7 +18427,7 @@
         t2 = new Uint8Array(16);
       return new A.MD2Digest(t1, t2, new Uint8Array(16));
     },
-    $signature: 53
+    $signature: 56
   };
   A.MD4Digest.prototype = {
     resetState$0() {
@@ -16636,7 +18562,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 54
+    $signature: 57
   };
   A.MD5Digest.prototype = {
     resetState$0() {
@@ -16786,7 +18712,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 55
+    $signature: 58
   };
   A.RIPEMD128Digest.prototype = {
     resetState$0() {
@@ -17017,7 +18943,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 56
+    $signature: 59
   };
   A.RIPEMD160Digest.prototype = {
     resetState$0() {
@@ -17428,7 +19354,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 57
+    $signature: 60
   };
   A.RIPEMD256Digest.prototype = {
     resetState$0() {
@@ -17678,7 +19604,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 58
+    $signature: 61
   };
   A.RIPEMD320Digest.prototype = {
     resetState$0() {
@@ -18113,7 +20039,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 59
+    $signature: 62
   };
   A.SHA1Digest.prototype = {
     resetState$0() {
@@ -18302,7 +20228,7 @@
     call$0() {
       return A.SHA1Digest$();
     },
-    $signature: 8
+    $signature: 10
   };
   A.SHA224Digest.prototype = {
     resetState$0() {
@@ -18493,7 +20419,7 @@
       t3.reset$0(0);
       return t3;
     },
-    $signature: 60
+    $signature: 63
   };
   A.SHA256Digest.prototype = {
     resetState$0() {
@@ -18679,7 +20605,7 @@
     call$0() {
       return A.SHA256Digest$();
     },
-    $signature: 61
+    $signature: 64
   };
   A.SHA3Digest.prototype = {
     SHA3Digest$1(bitLength) {
@@ -18714,7 +20640,7 @@
       A._asString(_);
       return new A.SHA3Digest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 62
+    $signature: 65
   };
   A.SHA3Digest_factoryConfig__closure.prototype = {
     call$0() {
@@ -18727,7 +20653,7 @@
       t1.SHA3Digest$1(bitLength);
       return t1;
     },
-    $signature: 63
+    $signature: 66
   };
   A.SHA384Digest.prototype = {
     reset$0(_) {
@@ -18778,7 +20704,7 @@
       t1.reset$0(0);
       return t1;
     },
-    $signature: 64
+    $signature: 67
   };
   A.SHA512Digest.prototype = {
     reset$0(_) {
@@ -18831,7 +20757,7 @@
       t1.reset$0(0);
       return t1;
     },
-    $signature: 65
+    $signature: 68
   };
   A.SHA512tDigest.prototype = {
     get$algorithmName() {
@@ -18876,7 +20802,7 @@
       A._asString(_);
       return new A.SHA512tDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 66
+    $signature: 69
   };
   A.SHA512tDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -18957,7 +20883,7 @@
       t18.reset$0(0);
       return t18;
     },
-    $signature: 67
+    $signature: 70
   };
   A.SHAKEDigest.prototype = {
     SHAKEDigest$1(bitLength) {
@@ -18998,7 +20924,7 @@
       A._asString(_);
       return new A.SHAKEDigest_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 68
+    $signature: 71
   };
   A.SHAKEDigest_factoryConfig__closure.prototype = {
     call$0() {
@@ -19006,7 +20932,7 @@
       t1.toString;
       return A.SHAKEDigest$(A.int_parse(t1, null));
     },
-    $signature: 69
+    $signature: 72
   };
   A.SM3Digest.prototype = {
     resetState$0() {
@@ -19119,7 +21045,7 @@
       t1.reset$0(0);
       return t1;
     },
-    $signature: 70
+    $signature: 12
   };
   A.TigerDigest.prototype = {
     reset$0(_) {
@@ -19559,7 +21485,7 @@
       t1.reset$0(0);
       return t1;
     },
-    $signature: 71
+    $signature: 74
   };
   A.WhirlpoolDigest.prototype = {
     reset$0(_) {
@@ -20109,7 +22035,7 @@
       t1.reset$0(0);
       return t1;
     },
-    $signature: 10
+    $signature: 75
   };
   A.ECCurve_brainpoolp160r1.prototype = {};
   A.ECCurve_brainpoolp160r1_factoryConfig_closure.prototype = {
@@ -20121,7 +22047,7 @@
         t5 = A._BigIntImpl_parse("e95e4a5f737059dc60df5991d45029409e60fc09", 16);
       return type$.ECCurve_brainpoolp160r1._as(A.constructFpStandardCurve("brainpoolp160r1", A.brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 73
+    $signature: 76
   };
   A.ECCurve_brainpoolp160t1.prototype = {};
   A.ECCurve_brainpoolp160t1_factoryConfig_closure.prototype = {
@@ -20133,7 +22059,7 @@
         t5 = A._BigIntImpl_parse("e95e4a5f737059dc60df5991d45029409e60fc09", 16);
       return type$.ECCurve_brainpoolp160t1._as(A.constructFpStandardCurve("brainpoolp160t1", A.brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 74
+    $signature: 77
   };
   A.ECCurve_brainpoolp192r1.prototype = {};
   A.ECCurve_brainpoolp192r1_factoryConfig_closure.prototype = {
@@ -20145,7 +22071,7 @@
         t5 = A._BigIntImpl_parse(string$.c302f42, 16);
       return type$.ECCurve_brainpoolp192r1._as(A.constructFpStandardCurve("brainpoolp192r1", A.brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 75
+    $signature: 78
   };
   A.ECCurve_brainpoolp192t1.prototype = {};
   A.ECCurve_brainpoolp192t1_factoryConfig_closure.prototype = {
@@ -20157,7 +22083,7 @@
         t5 = A._BigIntImpl_parse(string$.c302f42, 16);
       return type$.ECCurve_brainpoolp192t1._as(A.constructFpStandardCurve("brainpoolp192t1", A.brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 76
+    $signature: 79
   };
   A.ECCurve_brainpoolp224r1.prototype = {};
   A.ECCurve_brainpoolp224r1_factoryConfig_closure.prototype = {
@@ -20169,7 +22095,7 @@
         t5 = A._BigIntImpl_parse(string$.d7c1340, 16);
       return type$.ECCurve_brainpoolp224r1._as(A.constructFpStandardCurve("brainpoolp224r1", A.brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 77
+    $signature: 80
   };
   A.ECCurve_brainpoolp224t1.prototype = {};
   A.ECCurve_brainpoolp224t1_factoryConfig_closure.prototype = {
@@ -20181,7 +22107,7 @@
         t5 = A._BigIntImpl_parse(string$.d7c1340, 16);
       return type$.ECCurve_brainpoolp224t1._as(A.constructFpStandardCurve("brainpoolp224t1", A.brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 78
+    $signature: 81
   };
   A.ECCurve_brainpoolp256r1.prototype = {};
   A.ECCurve_brainpoolp256r1_factoryConfig_closure.prototype = {
@@ -20193,7 +22119,7 @@
         t5 = A._BigIntImpl_parse(string$.a9fb571, 16);
       return type$.ECCurve_brainpoolp256r1._as(A.constructFpStandardCurve("brainpoolp256r1", A.brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 79
+    $signature: 82
   };
   A.ECCurve_brainpoolp256t1.prototype = {};
   A.ECCurve_brainpoolp256t1_factoryConfig_closure.prototype = {
@@ -20205,7 +22131,7 @@
         t5 = A._BigIntImpl_parse(string$.a9fb571, 16);
       return type$.ECCurve_brainpoolp256t1._as(A.constructFpStandardCurve("brainpoolp256t1", A.brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 80
+    $signature: 83
   };
   A.ECCurve_brainpoolp320r1.prototype = {};
   A.ECCurve_brainpoolp320r1_factoryConfig_closure.prototype = {
@@ -20217,7 +22143,7 @@
         t5 = A._BigIntImpl_parse(string$.d35e475, 16);
       return type$.ECCurve_brainpoolp320r1._as(A.constructFpStandardCurve("brainpoolp320r1", A.brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 81
+    $signature: 84
   };
   A.ECCurve_brainpoolp320t1.prototype = {};
   A.ECCurve_brainpoolp320t1_factoryConfig_closure.prototype = {
@@ -20229,7 +22155,7 @@
         t5 = A._BigIntImpl_parse(string$.d35e475, 16);
       return type$.ECCurve_brainpoolp320t1._as(A.constructFpStandardCurve("brainpoolp320t1", A.brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 82
+    $signature: 85
   };
   A.ECCurve_brainpoolp384r1.prototype = {};
   A.ECCurve_brainpoolp384r1_factoryConfig_closure.prototype = {
@@ -20241,7 +22167,7 @@
         t5 = A._BigIntImpl_parse(string$.x38cb91e3, 16);
       return type$.ECCurve_brainpoolp384r1._as(A.constructFpStandardCurve("brainpoolp384r1", A.brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 83
+    $signature: 86
   };
   A.ECCurve_brainpoolp384t1.prototype = {};
   A.ECCurve_brainpoolp384t1_factoryConfig_closure.prototype = {
@@ -20253,7 +22179,7 @@
         t5 = A._BigIntImpl_parse(string$.x38cb91e3, 16);
       return type$.ECCurve_brainpoolp384t1._as(A.constructFpStandardCurve("brainpoolp384t1", A.brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 84
+    $signature: 87
   };
   A.ECCurve_brainpoolp512r1.prototype = {};
   A.ECCurve_brainpoolp512r1_factoryConfig_closure.prototype = {
@@ -20265,7 +22191,7 @@
         t5 = A._BigIntImpl_parse(string$.aadd9d0, 16);
       return type$.ECCurve_brainpoolp512r1._as(A.constructFpStandardCurve("brainpoolp512r1", A.brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 85
+    $signature: 88
   };
   A.ECCurve_brainpoolp512t1.prototype = {};
   A.ECCurve_brainpoolp512t1_factoryConfig_closure.prototype = {
@@ -20277,7 +22203,7 @@
         t5 = A._BigIntImpl_parse(string$.aadd9d0, 16);
       return type$.ECCurve_brainpoolp512t1._as(A.constructFpStandardCurve("brainpoolp512t1", A.brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 86
+    $signature: 89
   };
   A.ECCurve_gostr3410_2001_cryptopro_a.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_a_factoryConfig_closure.prototype = {
@@ -20289,7 +22215,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffffff6, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_a._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-A", A.gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 87
+    $signature: 90
   };
   A.ECCurve_gostr3410_2001_cryptopro_b.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_b_factoryConfig_closure.prototype = {
@@ -20301,7 +22227,7 @@
         t5 = A._BigIntImpl_parse("800000000000000000000000000000015f700cfff1a624e5e497161bcc8a198f", 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_b._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-B", A.gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 88
+    $signature: 91
   };
   A.ECCurve_gostr3410_2001_cryptopro_c.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_c_factoryConfig_closure.prototype = {
@@ -20313,7 +22239,7 @@
         t5 = A._BigIntImpl_parse(string$.x39b9f605, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_c._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-C", A.gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 89
+    $signature: 92
   };
   A.ECCurve_gostr3410_2001_cryptopro_xcha.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_xcha_factoryConfig_closure.prototype = {
@@ -20325,7 +22251,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffffff6, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_xcha._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-XchA", A.gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 90
+    $signature: 93
   };
   A.ECCurve_gostr3410_2001_cryptopro_xchb.prototype = {};
   A.ECCurve_gostr3410_2001_cryptopro_xchb_factoryConfig_closure.prototype = {
@@ -20337,7 +22263,7 @@
         t5 = A._BigIntImpl_parse(string$.x39b9f605, 16);
       return type$.ECCurve_gostr3410_2001_cryptopro_xchb._as(A.constructFpStandardCurve("GostR3410-2001-CryptoPro-XchB", A.gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 91
+    $signature: 94
   };
   A.ECCurve_prime192v1.prototype = {};
   A.ECCurve_prime192v1_factoryConfig_closure.prototype = {
@@ -20349,7 +22275,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffff9, 16);
       return type$.ECCurve_prime192v1._as(A.constructFpStandardCurve("prime192v1", A.prime192v1_ECCurve_prime192v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("3045ae6fc8422f64ed579528d38120eae12196d5", 16)));
     },
-    $signature: 92
+    $signature: 95
   };
   A.ECCurve_prime192v2.prototype = {};
   A.ECCurve_prime192v2_factoryConfig_closure.prototype = {
@@ -20361,7 +22287,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffe5fb1a724dc80418648d8dd31", 16);
       return type$.ECCurve_prime192v2._as(A.constructFpStandardCurve("prime192v2", A.prime192v2_ECCurve_prime192v2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("31a92ee2029fd10d901b113e990710f0d21ac6b6", 16)));
     },
-    $signature: 93
+    $signature: 96
   };
   A.ECCurve_prime192v3.prototype = {};
   A.ECCurve_prime192v3_factoryConfig_closure.prototype = {
@@ -20373,7 +22299,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffff7a62d031c83f4294f640ec13", 16);
       return type$.ECCurve_prime192v3._as(A.constructFpStandardCurve("prime192v3", A.prime192v3_ECCurve_prime192v3__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c469684435deb378c4b65ca9591e2a5763059a2e", 16)));
     },
-    $signature: 94
+    $signature: 97
   };
   A.ECCurve_prime239v1.prototype = {};
   A.ECCurve_prime239v1_factoryConfig_closure.prototype = {
@@ -20385,7 +22311,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff7fffff9e5e9a9f5d9071fbd1522688909d0b", 16);
       return type$.ECCurve_prime239v1._as(A.constructFpStandardCurve("prime239v1", A.prime239v1_ECCurve_prime239v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("e43bb460f0b80cc0c0b075798e948060f8321b7d", 16)));
     },
-    $signature: 95
+    $signature: 98
   };
   A.ECCurve_prime239v2.prototype = {};
   A.ECCurve_prime239v2_factoryConfig_closure.prototype = {
@@ -20397,7 +22323,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff800000cfa7e8594377d414c03821bc582063", 16);
       return type$.ECCurve_prime239v2._as(A.constructFpStandardCurve("prime239v2", A.prime239v2_ECCurve_prime239v2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("e8b4011604095303ca3b8099982be09fcb9ae616", 16)));
     },
-    $signature: 96
+    $signature: 99
   };
   A.ECCurve_prime239v3.prototype = {};
   A.ECCurve_prime239v3_factoryConfig_closure.prototype = {
@@ -20409,7 +22335,7 @@
         t5 = A._BigIntImpl_parse("7fffffffffffffffffffffff7fffff975deb41b3a6057c3c432146526551", 16);
       return type$.ECCurve_prime239v3._as(A.constructFpStandardCurve("prime239v3", A.prime239v3_ECCurve_prime239v3__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("7d7374168ffe3471b60a857686a19475d3bfa2ff", 16)));
     },
-    $signature: 97
+    $signature: 100
   };
   A.ECCurve_prime256v1.prototype = {};
   A.ECCurve_prime256v1_factoryConfig_closure.prototype = {
@@ -20421,7 +22347,7 @@
         t5 = A._BigIntImpl_parse(string$.ffffff00, 16);
       return type$.ECCurve_prime256v1._as(A.constructFpStandardCurve("prime256v1", A.prime256v1_ECCurve_prime256v1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c49d360886e704936a6678e1139d26b7819f7e90", 16)));
     },
-    $signature: 98
+    $signature: 101
   };
   A.ECCurve_secp112r1.prototype = {};
   A.ECCurve_secp112r1_factoryConfig_closure.prototype = {
@@ -20433,7 +22359,7 @@
         t5 = A._BigIntImpl_parse("db7c2abf62e35e7628dfac6561c5", 16);
       return type$.ECCurve_secp112r1._as(A.constructFpStandardCurve("secp112r1", A.secp112r1_ECCurve_secp112r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("00f50b028e4d696e676875615175290472783fb1", 16)));
     },
-    $signature: 99
+    $signature: 102
   };
   A.ECCurve_secp112r2.prototype = {};
   A.ECCurve_secp112r2_factoryConfig_closure.prototype = {
@@ -20445,7 +22371,7 @@
         t5 = A._BigIntImpl_parse("36df0aafd8b8d7597ca10520d04b", 16);
       return type$.ECCurve_secp112r2._as(A.constructFpStandardCurve("secp112r2", A.secp112r2_ECCurve_secp112r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("4", 16), t5, t1, A._BigIntImpl_parse("002757a1114d696e6768756151755316c05e0bd4", 16)));
     },
-    $signature: 100
+    $signature: 103
   };
   A.ECCurve_secp128r1.prototype = {};
   A.ECCurve_secp128r1_factoryConfig_closure.prototype = {
@@ -20457,7 +22383,7 @@
         t5 = A._BigIntImpl_parse("fffffffe0000000075a30d1b9038a115", 16);
       return type$.ECCurve_secp128r1._as(A.constructFpStandardCurve("secp128r1", A.secp128r1_ECCurve_secp128r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("000e0d4d696e6768756151750cc03a4473d03679", 16)));
     },
-    $signature: 101
+    $signature: 104
   };
   A.ECCurve_secp128r2.prototype = {};
   A.ECCurve_secp128r2_factoryConfig_closure.prototype = {
@@ -20469,7 +22395,7 @@
         t5 = A._BigIntImpl_parse("3fffffff7fffffffbe0024720613b5a3", 16);
       return type$.ECCurve_secp128r2._as(A.constructFpStandardCurve("secp128r2", A.secp128r2_ECCurve_secp128r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("4", 16), t5, t1, A._BigIntImpl_parse("004d696e67687561517512d8f03431fce63b88f4", 16)));
     },
-    $signature: 102
+    $signature: 105
   };
   A.ECCurve_secp160k1.prototype = {};
   A.ECCurve_secp160k1_factoryConfig_closure.prototype = {
@@ -20481,7 +22407,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000001b8fa16dfab9aca16b6b3", 16);
       return type$.ECCurve_secp160k1._as(A.constructFpStandardCurve("secp160k1", A.secp160k1_ECCurve_secp160k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 103
+    $signature: 106
   };
   A.ECCurve_secp160r1.prototype = {};
   A.ECCurve_secp160r1_factoryConfig_closure.prototype = {
@@ -20493,7 +22419,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000001f4c8f927aed3ca752257", 16);
       return type$.ECCurve_secp160r1._as(A.constructFpStandardCurve("secp160r1", A.secp160r1_ECCurve_secp160r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("1053cde42c14d696e67687561517533bf3f83345", 16)));
     },
-    $signature: 104
+    $signature: 107
   };
   A.ECCurve_secp160r2.prototype = {};
   A.ECCurve_secp160r2_factoryConfig_closure.prototype = {
@@ -20505,7 +22431,7 @@
         t5 = A._BigIntImpl_parse("100000000000000000000351ee786a818f3a1a16b", 16);
       return type$.ECCurve_secp160r2._as(A.constructFpStandardCurve("secp160r2", A.secp160r2_ECCurve_secp160r2__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("b99b99b099b323e02709a4d696e6768756151751", 16)));
     },
-    $signature: 105
+    $signature: 108
   };
   A.ECCurve_secp192k1.prototype = {};
   A.ECCurve_secp192k1_factoryConfig_closure.prototype = {
@@ -20517,7 +22443,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffe26f2fc170f69466a74defd8d", 16);
       return type$.ECCurve_secp192k1._as(A.constructFpStandardCurve("secp192k1", A.secp192k1_ECCurve_secp192k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 106
+    $signature: 109
   };
   A.ECCurve_secp192r1.prototype = {};
   A.ECCurve_secp192r1_factoryConfig_closure.prototype = {
@@ -20529,7 +22455,7 @@
         t5 = A._BigIntImpl_parse(string$.fffffff9, 16);
       return type$.ECCurve_secp192r1._as(A.constructFpStandardCurve("secp192r1", A.secp192r1_ECCurve_secp192r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("3045ae6fc8422f64ed579528d38120eae12196d5", 16)));
     },
-    $signature: 107
+    $signature: 110
   };
   A.ECCurve_secp224k1.prototype = {};
   A.ECCurve_secp224k1_factoryConfig_closure.prototype = {
@@ -20541,7 +22467,7 @@
         t5 = A._BigIntImpl_parse("10000000000000000000000000001dce8d2ec6184caf0a971769fb1f7", 16);
       return type$.ECCurve_secp224k1._as(A.constructFpStandardCurve("secp224k1", A.secp224k1_ECCurve_secp224k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 108
+    $signature: 111
   };
   A.ECCurve_secp224r1.prototype = {};
   A.ECCurve_secp224r1_factoryConfig_closure.prototype = {
@@ -20553,7 +22479,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffffffff16a2e0b8f03e13dd29455c5c2a3d", 16);
       return type$.ECCurve_secp224r1._as(A.constructFpStandardCurve("secp224r1", A.secp224r1_ECCurve_secp224r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("bd71344799d5c7fcdc45b59fa3b9ab8f6a948bc5", 16)));
     },
-    $signature: 109
+    $signature: 112
   };
   A.ECCurve_secp256k1.prototype = {};
   A.ECCurve_secp256k1_factoryConfig_closure.prototype = {
@@ -20565,7 +22491,7 @@
         t5 = A._BigIntImpl_parse("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
       return type$.ECCurve_secp256k1._as(A.constructFpStandardCurve("secp256k1", A.secp256k1_ECCurve_secp256k1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, null));
     },
-    $signature: 110
+    $signature: 113
   };
   A.ECCurve_secp256r1.prototype = {};
   A.ECCurve_secp256r1_factoryConfig_closure.prototype = {
@@ -20577,7 +22503,7 @@
         t5 = A._BigIntImpl_parse(string$.ffffff00, 16);
       return type$.ECCurve_secp256r1._as(A.constructFpStandardCurve("secp256r1", A.secp256r1_ECCurve_secp256r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("c49d360886e704936a6678e1139d26b7819f7e90", 16)));
     },
-    $signature: 111
+    $signature: 114
   };
   A.ECCurve_secp384r1.prototype = {};
   A.ECCurve_secp384r1_factoryConfig_closure.prototype = {
@@ -20589,7 +22515,7 @@
         t5 = A._BigIntImpl_parse("ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973", 16);
       return type$.ECCurve_secp384r1._as(A.constructFpStandardCurve("secp384r1", A.secp384r1_ECCurve_secp384r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("a335926aa319a27a1d00896a6773a4827acdac73", 16)));
     },
-    $signature: 112
+    $signature: 115
   };
   A.ECCurve_secp521r1.prototype = {};
   A.ECCurve_secp521r1_factoryConfig_closure.prototype = {
@@ -20601,7 +22527,7 @@
         t5 = A._BigIntImpl_parse("1fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa51868783bf2f966b7fcc0148f709a5d03bb5c9b8899c47aebb6fb71e91386409", 16);
       return type$.ECCurve_secp521r1._as(A.constructFpStandardCurve("secp521r1", A.secp521r1_ECCurve_secp521r1__make$closure(), t2, t3, t4, A._BigIntImpl_parse("1", 16), t5, t1, A._BigIntImpl_parse("d09e8800291cb85396cc6717393284aaa0da64ba", 16)));
     },
-    $signature: 113
+    $signature: 116
   };
   A.ECDomainParametersImpl.prototype = {$isECDomainParameters: 1};
   A.ECFieldElementBase.prototype = {
@@ -20876,7 +22802,7 @@
       type$.nullable_ECPoint._as(e);
       return e == null ? type$.ECPoint._as(e) : e;
     },
-    $signature: 114
+    $signature: 117
   };
   A.Pbkdf2Parameters.prototype = {};
   A.Argon2BytesGenerator.prototype = {};
@@ -20884,7 +22810,7 @@
     call$0() {
       return new A.Argon2BytesGenerator(A.Register64$(0, null));
     },
-    $signature: 115
+    $signature: 118
   };
   A.ConcatKDFDerivator.prototype = {};
   A.ConcatKDFDerivator_factoryConfig_closure.prototype = {
@@ -20895,20 +22821,20 @@
       digestName.toString;
       return new A.ConcatKDFDerivator_factoryConfig__closure($.$get$registry().create$1$1(0, digestName, type$.Digest));
     },
-    $signature: 116
+    $signature: 119
   };
   A.ConcatKDFDerivator_factoryConfig__closure.prototype = {
     call$0() {
       return new A.ConcatKDFDerivator(this.digest);
     },
-    $signature: 117
+    $signature: 120
   };
   A.ECDHKeyDerivator.prototype = {};
   A.ECDHKeyDerivator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.ECDHKeyDerivator();
     },
-    $signature: 118
+    $signature: 121
   };
   A.HKDFKeyDerivator.prototype = {};
   A.HKDFKeyDerivator_factoryConfig_closure.prototype = {
@@ -20919,7 +22845,7 @@
       digestName.toString;
       return new A.HKDFKeyDerivator_factoryConfig__closure($.$get$registry().create$1$1(0, digestName, type$.Digest));
     },
-    $signature: 119
+    $signature: 122
   };
   A.HKDFKeyDerivator_factoryConfig__closure.prototype = {
     call$0() {
@@ -20933,13 +22859,13 @@
       t2.__HKDFKeyDerivator__hashLen_A = t1;
       return t2;
     },
-    $signature: 120
+    $signature: 123
   };
   A.HKDFKeyDerivator__getBlockLengthFromDigest_closure.prototype = {
     call$1(map) {
       return type$.MapEntry_String_int._as(map).key.toLowerCase() === this.digestName.toLowerCase();
     },
-    $signature: 121
+    $signature: 124
   };
   A.PBKDF2KeyDerivator.prototype = {
     get$keySize() {
@@ -21011,7 +22937,7 @@
       A._asString(_);
       return new A.PBKDF2KeyDerivator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 122
+    $signature: 125
   };
   A.PBKDF2KeyDerivator_factoryConfig__closure.prototype = {
     call$0() {
@@ -21019,7 +22945,7 @@
       t1.toString;
       return A.PBKDF2KeyDerivator$($.$get$registry().create$1$1(0, t1, type$.Mac));
     },
-    $signature: 123
+    $signature: 126
   };
   A.PKCS12ParametersGenerator.prototype = {};
   A.PKCS12ParametersGenerator_factoryConfig_closure.prototype = {
@@ -21027,7 +22953,7 @@
       A._asString(_);
       return new A.PKCS12ParametersGenerator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 124
+    $signature: 127
   };
   A.PKCS12ParametersGenerator_factoryConfig__closure.prototype = {
     call$0() {
@@ -21039,7 +22965,7 @@
       mac.get$byteLength(mac);
       return new A.PKCS12ParametersGenerator(mac);
     },
-    $signature: 125
+    $signature: 128
   };
   A.PKCS5S1ParameterGenerator.prototype = {};
   A.PKCS5S1ParameterGenerator_factoryConfig_closure.prototype = {
@@ -21047,7 +22973,7 @@
       A._asString(_);
       return new A.PKCS5S1ParameterGenerator_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 126
+    $signature: 129
   };
   A.PKCS5S1ParameterGenerator_factoryConfig__closure.prototype = {
     call$0() {
@@ -21056,7 +22982,7 @@
       $.$get$registry().create$1$1(0, t1, type$.Digest);
       return new A.PKCS5S1ParameterGenerator();
     },
-    $signature: 127
+    $signature: 130
   };
   A.Scrypt.prototype = {};
   A.Scrypt_factoryConfig_closure.prototype = {
@@ -21064,7 +22990,7 @@
       var t1 = type$.int;
       return new A.Scrypt(A.List_List$filled(16, 0, false, t1), A.List_List$filled(16, 0, false, t1));
     },
-    $signature: 128
+    $signature: 131
   };
   A.RSAKeyGeneratorParameters.prototype = {};
   A.ECKeyGenerator.prototype = {};
@@ -21072,11 +22998,11 @@
     call$0() {
       return new A.ECKeyGenerator();
     },
-    $signature: 129
+    $signature: 132
   };
   A.RSAKeyGenerator.prototype = {
     generateKeyPair$0() {
-      var strength, pbitlength, qbitlength, mindiffbits, e, p, t2, n, q, t0, d, t3, _this = this, _null = null,
+      var strength, pbitlength, qbitlength, mindiffbits, e, p, t2, q, n, t0, _this = this,
         t1 = _this.__RSAKeyGenerator__params_A;
       t1 === $ && A.throwLateFieldNI("_params");
       strength = t1.bitStrength;
@@ -21084,7 +23010,7 @@
       qbitlength = strength - pbitlength;
       mindiffbits = strength / 3 | 0;
       e = t1.publicExponent;
-      for (p = _null; true;) {
+      for (p = null; true;) {
         t1 = _this.__RSAKeyGenerator__random_A;
         t1 === $ && A.throwLateFieldNI("_random");
         p = A.generateProbablePrime(pbitlength, 1, t1);
@@ -21099,7 +23025,7 @@
         if (t1 === 0)
           break;
       }
-      for (n = _null, q = n; true;) {
+      for (q = null, n = null; true;) {
         for (; true;) {
           t1 = _this.__RSAKeyGenerator__random_A;
           t1 === $ && A.throwLateFieldNI("_random");
@@ -21130,24 +23056,14 @@
         p = t0;
       }
       t1 = $.$get$_BigIntImpl_one();
-      d = e.modInverse$1(0, p.$sub(0, t1).$mul(0, q.$sub(0, t1)));
-      t2 = new A.RSAPrivateKey(p, q, n, d);
-      t3 = p.$mul(0, q).compareTo$1(0, n);
-      if (t3 !== 0)
-        A.throwExpression(A.ArgumentError$value("modulus inconsistent with RSA p and q", _null, _null));
-      t1 = d.modInverse$1(0, p.$sub(0, t1).$mul(0, q.$sub(0, t1)));
-      t2._pubExp = t1;
-      t1 = e.$eq(0, t1);
-      if (!t1)
-        A.throwExpression(A.ArgumentError$("public exponent inconsistent with RSA private exponent, p and q", _null));
-      return new A.AsymmetricKeyPair(new A.RSAPublicKey(n, e), t2, type$.AsymmetricKeyPair_RSAPublicKey_RSAPrivateKey);
+      return new A.AsymmetricKeyPair(new A.RSAPublicKey(n, e), A.RSAPrivateKey$(n, e.modInverse$1(0, p.$sub(0, t1).$mul(0, q.$sub(0, t1))), p, q, e), type$.AsymmetricKeyPair_RSAPublicKey_RSAPrivateKey);
     }
   };
   A.RSAKeyGenerator_factoryConfig_closure.prototype = {
     call$0() {
       return new A.RSAKeyGenerator();
     },
-    $signature: 130
+    $signature: 133
   };
   A.CBCBlockCipherMac.prototype = {
     init$1(params) {
@@ -21266,7 +23182,7 @@
       A._asString(_);
       return new A.CBCBlockCipherMac_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 131
+    $signature: 134
   };
   A.CBCBlockCipherMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -21293,7 +23209,7 @@
       t2.__CBCBlockCipherMac__bufOff_A = 0;
       return t2;
     },
-    $signature: 132
+    $signature: 135
   };
   A.CMac.prototype = {
     _doubleLu$1(inp) {
@@ -21439,7 +23355,7 @@
       A._asString(_);
       return new A.CMac_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 133
+    $signature: 136
   };
   A.CMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -21465,7 +23381,7 @@
       t2.__CMac__bufOff_A = 0;
       return t2;
     },
-    $signature: 134
+    $signature: 137
   };
   A.HMac.prototype = {
     get$macSize() {
@@ -21544,7 +23460,7 @@
       A._asString(_);
       return new A.HMac_factoryConfig__closure(type$.Match._as(match).group$1(1));
     },
-    $signature: 135
+    $signature: 138
   };
   A.HMac_factoryConfig__closure.prototype = {
     call$0() {
@@ -21560,7 +23476,7 @@
       t2.__HMac__outputBuf_A = new Uint8Array(t3 + t1);
       return t2;
     },
-    $signature: 136
+    $signature: 139
   };
   A.Poly1305.prototype = {
     get$macSize() {
@@ -21825,7 +23741,7 @@
       A._asString(_);
       return new A.Poly1305_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 137
+    $signature: 140
   };
   A.Poly1305_factoryConfig__closure.prototype = {
     call$0() {
@@ -21838,7 +23754,7 @@
       $.$get$PlatformWeb_instance().assertFullWidthInteger$0();
       return new A.Poly1305(cipher, t1, t2);
     },
-    $signature: 138
+    $signature: 141
   };
   A.PaddedBlockCipherImpl.prototype = {
     get$blockSize() {
@@ -21915,7 +23831,7 @@
       A._asString(_);
       return new A.PaddedBlockCipherImpl_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 139
+    $signature: 142
   };
   A.PaddedBlockCipherImpl_factoryConfig__closure.prototype = {
     call$0() {
@@ -21929,7 +23845,7 @@
       t1.toString;
       return new A.PaddedBlockCipherImpl(padding, t3.create$1$1(0, t1, type$.BlockCipher));
     },
-    $signature: 140
+    $signature: 143
   };
   A.ISO7816d4Padding.prototype = {
     init$1(params) {
@@ -21968,7 +23884,7 @@
     call$0() {
       return new A.ISO7816d4Padding();
     },
-    $signature: 141
+    $signature: 144
   };
   A.PKCS7Padding.prototype = {
     init$1(params) {
@@ -22010,7 +23926,7 @@
     call$0() {
       return new A.PKCS7Padding();
     },
-    $signature: 142
+    $signature: 219
   };
   A.AutoSeedBlockCtrRandom.prototype = {
     nextBigInteger$1(bitLength) {
@@ -22050,7 +23966,7 @@
       A._asString(_);
       return new A.AutoSeedBlockCtrRandom_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 143
+    $signature: 146
   };
   A.AutoSeedBlockCtrRandom_factoryConfig__closure.prototype = {
     call$0() {
@@ -22058,7 +23974,7 @@
       blockCipherName.toString;
       return A.AutoSeedBlockCtrRandom$($.$get$registry().create$1$1(0, blockCipherName, type$.BlockCipher), true);
     },
-    $signature: 216
+    $signature: 147
   };
   A.AutoSeedBlockCtrRandom_nextBigInteger_closure.prototype = {
     call$0() {
@@ -22066,7 +23982,7 @@
       t1 === $ && A.throwLateFieldNI("_delegate");
       return A.decodeBigIntWithSign(1, t1._randomBits$1(this.bitLength));
     },
-    $signature: 145
+    $signature: 148
   };
   A.AutoSeedBlockCtrRandom_nextBytes_closure.prototype = {
     call$0() {
@@ -22074,7 +23990,7 @@
       t1 === $ && A.throwLateFieldNI("_delegate");
       return t1.nextBytes$1(this.count);
     },
-    $signature: 146
+    $signature: 149
   };
   A.BlockCtrRandom.prototype = {
     seed$1(_, params) {
@@ -22132,7 +24048,7 @@
       A._asString(_);
       return new A.BlockCtrRandom_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 147
+    $signature: 150
   };
   A.BlockCtrRandom_factoryConfig__closure.prototype = {
     call$0() {
@@ -22140,7 +24056,7 @@
       blockCipherName.toString;
       return A.BlockCtrRandom$($.$get$registry().create$1$1(0, blockCipherName, type$.BlockCipher));
     },
-    $signature: 148
+    $signature: 151
   };
   A.FortunaRandom.prototype = {
     nextBigInteger$1(bitLength) {
@@ -22154,7 +24070,7 @@
     call$0() {
       return A.FortunaRandom$();
     },
-    $signature: 149
+    $signature: 152
   };
   A.ECDSASigner.prototype = {};
   A.ECDSASigner_factoryConfig_closure.prototype = {
@@ -22163,7 +24079,7 @@
       type$.Match._as(match);
       return new A.ECDSASigner_factoryConfig__closure(match.group$1(1), match.group$1(2) != null);
     },
-    $signature: 150
+    $signature: 153
   };
   A.ECDSASigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -22176,7 +24092,7 @@
         t2.create$1$1(0, t1 + "/HMAC", type$.Mac);
       return new A.ECDSASigner();
     },
-    $signature: 151
+    $signature: 154
   };
   A.PSSSigner.prototype = {};
   A.PSSSigner_factoryConfig_closure.prototype = {
@@ -22184,7 +24100,7 @@
       A._asString(_);
       return new A.PSSSigner_factoryConfig__closure(type$.Match._as(match).group$1(1));
     },
-    $signature: 152
+    $signature: 155
   };
   A.PSSSigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -22200,7 +24116,7 @@
       t3.get$digestSize();
       return new A.PSSSigner();
     },
-    $signature: 153
+    $signature: 156
   };
   A.RSASigner.prototype = {
     _hexStringToBytes$1(hex) {
@@ -22231,7 +24147,7 @@
         throw A.wrapException(A.RegistryFactoryException$("RSA signing with digest " + digestName + " is not supported"));
       return new A.RSASigner_factoryConfig__closure(digestName, digestIdentifierHex);
     },
-    $signature: 154
+    $signature: 157
   };
   A.RSASigner_factoryConfig__closure.prototype = {
     call$0() {
@@ -22240,7 +24156,7 @@
       t1._hexStringToBytes$1(this.digestIdentifierHex);
       return t1;
     },
-    $signature: 155
+    $signature: 158
   };
   A.BaseAEADBlockCipher.prototype = {
     get$blockSize() {
@@ -23567,13 +25483,13 @@
     call$1(m) {
       return "\\" + A.S(m.group$1(0));
     },
-    $signature: 156
+    $signature: 159
   };
   A._escapeRegExp_closure0.prototype = {
     call$1(s) {
       return s;
     },
-    $signature: 157
+    $signature: 9
   };
   A.DynamicFactoryConfig.prototype = {
     tryFactory$1(algorithmName) {
@@ -23759,13 +25675,13 @@
     call$0() {
       return A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.dynamic_Function);
     },
-    $signature: 158
+    $signature: 160
   };
   A._RegistryImpl__addDynamicFactoryConfig_closure.prototype = {
     call$0() {
       return A.LinkedHashSet_LinkedHashSet$_empty(type$.DynamicFactoryConfig);
     },
-    $signature: 159
+    $signature: 161
   };
   A.Register64.prototype = {
     get$_hi32() {
@@ -24140,6 +26056,14 @@
     get$length(_) {
       return this._list.length;
     },
+    $index(_, index) {
+      var t1;
+      A._asInt(index);
+      t1 = this._list;
+      if (!(index >= 0 && index < t1.length))
+        return A.ioore(t1, index);
+      return t1[index];
+    },
     fillRange$3(_, start, end, hiOrLo32OrY) {
       var t1, i;
       for (t1 = this._list, i = start; i < end; ++i) {
@@ -24187,7 +26111,7 @@
       A._asString(_);
       return new A.ChaCha20Engine_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 160
+    $signature: 162
   };
   A.ChaCha20Engine_factoryConfig__closure.prototype = {
     call$0() {
@@ -24200,7 +26124,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.ChaCha20Engine(rounds, t2, t1, new Uint8Array(64));
     },
-    $signature: 161
+    $signature: 163
   };
   A.ChaCha20Poly1305_factoryConfig_closure.prototype = {
     call$0() {
@@ -24213,7 +26137,7 @@
       $.$get$PlatformWeb_instance().assertFullWidthInteger$0();
       return void 1;
     },
-    $signature: 162
+    $signature: 164
   };
   A.ChaCha7539Engine.prototype = {};
   A.ChaCha7539Engine_factoryConfig_closure.prototype = {
@@ -24221,7 +26145,7 @@
       A._asString(_);
       return new A.ChaCha7539Engine_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 163
+    $signature: 165
   };
   A.ChaCha7539Engine_factoryConfig__closure.prototype = {
     call$0() {
@@ -24234,7 +26158,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.ChaCha7539Engine(rounds, t2, t1, new Uint8Array(64));
     },
-    $signature: 164
+    $signature: 166
   };
   A.CTRStreamCipher.prototype = {};
   A.CTRStreamCipher_factoryConfig_closure.prototype = {
@@ -24242,7 +26166,7 @@
       A._asString(_);
       return new A.CTRStreamCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 165
+    $signature: 167
   };
   A.CTRStreamCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -24250,7 +26174,7 @@
       digestName.toString;
       return A.CTRStreamCipher$($.$get$registry().create$1$1(0, digestName, type$.BlockCipher));
     },
-    $signature: 166
+    $signature: 168
   };
   A.EAX.prototype = {};
   A.EAX_factoryConfig_closure.prototype = {
@@ -24258,7 +26182,7 @@
       A._asString(_);
       return new A.EAX_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 167
+    $signature: 169
   };
   A.EAX_factoryConfig__closure.prototype = {
     call$0() {
@@ -24271,14 +26195,14 @@
       B.JSInt_methods._tdivFast$1(t1.get$blockSize(), 2);
       return new A.EAX();
     },
-    $signature: 168
+    $signature: 170
   };
   A.RC4Engine.prototype = {};
   A.RC4Engine_factoryConfig_closure.prototype = {
     call$0() {
       return new A.RC4Engine();
     },
-    $signature: 169
+    $signature: 171
   };
   A.Salsa20Engine.prototype = {};
   A.Salsa20Engine_factoryConfig_closure.prototype = {
@@ -24288,7 +26212,7 @@
       t1 = A.List_List$filled(16, 0, false, t1);
       return new A.Salsa20Engine(t2, t1, new Uint8Array(64));
     },
-    $signature: 170
+    $signature: 172
   };
   A.SICStreamCipher.prototype = {
     SICStreamCipher$1(underlyingCipher) {
@@ -24366,7 +26290,7 @@
       A._asString(_);
       return new A.SICStreamCipher_factoryConfig__closure(type$.Match._as(match));
     },
-    $signature: 171
+    $signature: 173
   };
   A.SICStreamCipher_factoryConfig__closure.prototype = {
     call$0() {
@@ -24374,11 +26298,11 @@
       digestName.toString;
       return A.SICStreamCipher$($.$get$registry().create$1$1(0, digestName, type$.BlockCipher));
     },
-    $signature: 172
+    $signature: 174
   };
   A.main_closure.prototype = {
     call$1($event) {
-      var encryptedBase64, cipher, decrypted, pem, copy, generator, pair, version, algorithmSeq, algorithmAsn1Obj, paramsAsn1Obj, privateKeySeq, modulus, publicExponent, t3, privateExponent, t4, p, q, exp1, exp2, co, publicKeySeqOctetString, topLevelSeq, identifier, t5, publicKeySeq, publicKeySeqBitString, pemKey, key, exception, _this = this, _null = null,
+      var encryptedBase64, cipher, decrypted, pem, copy, generator, pair, version, algorithmSeq, algorithmAsn1Obj, paramsAsn1Obj, privateKeySeq, modulus, publicExponent, t3, privateExponent, t4, p, q, exp1, exp2, co, publicKeySeqOctetString, topLevelSeq, identifier, t5, publicKeySeq, publicKeySeqBitString, pemKey, key, exception, encryptedMessagesJson, privateKeyPem, result, _this = this, _null = null,
         _s13_ = "rsaEncryption",
         _s10_ = "passphrase",
         _s13_0 = "AES/CBC/PKCS7",
@@ -24413,7 +26337,9 @@
         p = A.ASN1Integer$(t4);
         t1 = t1.q;
         q = A.ASN1Integer$(t1);
+        t4.toString;
         exp1 = A.ASN1Integer$(t3.$mod(0, t4.$sub(0, A._BigIntImpl__BigIntImpl$from(1))));
+        t1.toString;
         exp2 = A.ASN1Integer$(t3.$mod(0, t1.$sub(0, A._BigIntImpl__BigIntImpl$from(1))));
         co = A.ASN1Integer$(t1.modInverse$1(0, t4));
         privateKeySeq.add$1(0, version);
@@ -24443,7 +26369,7 @@
         if (identifier == null)
           A.throwExpression(new A.UnsupportedObjectIdentifierException(_s13_));
         t5 = J.getInterceptor$asx(identifier);
-        A._asStringQ(t5.$index(identifier, "identifierString"));
+        t2.objectIdentifierAsString = A._asStringQ(t5.$index(identifier, "identifierString"));
         A._asStringQ(t5.$index(identifier, "readableName"));
         t2.objectIdentifier = type$.nullable_List_int._as(t5.$index(identifier, "identifier"));
         algorithmSeq.add$1(0, t2);
@@ -24475,19 +26401,84 @@
           cipher.init$2(false, new A.PaddedBlockCipherParameters(new A.ParametersWithIV(new Uint8Array(16), new A.KeyParameter(key), type$.ParametersWithIV_KeyParameter), _null, type$.PaddedBlockCipherParameters_of_ParametersWithIV_KeyParameter_and_Null));
           try {
             decrypted = cipher.process$1(B.C_Base64Decoder.convert$1(A._asString(encryptedBase64)));
-            t1 = type$.List_int._as(decrypted);
-            pem = B.Utf8Decoder_false.convert$1(t1);
+            pem = B.C_Utf8Codec.decode$1(0, decrypted);
             t1 = type$.String;
             B.DedicatedWorkerGlobalScope_methods.postMessage$1(_this.self, B.C_JsonCodec.encode$2$toEncodable(A.LinkedHashMap_LinkedHashMap$_literal(["cmd", "decrypted", "pem", pem], t1, t1), _null));
           } catch (exception) {
             t1 = type$.String;
             B.DedicatedWorkerGlobalScope_methods.postMessage$1(_this.self, B.C_JsonCodec.encode$2$toEncodable(A.LinkedHashMap_LinkedHashMap$_literal(["cmd", "decrypted", "pem", ""], t1, t1), _null));
           }
+        } else if (t2 && J.$eq$(t1.$index(copy, "cmd"), "decrypt_messages")) {
+          encryptedMessagesJson = t1.$index(copy, "messages");
+          privateKeyPem = t1.$index(copy, "private_key");
+          t1 = J.map$1$1$ax(type$.List_dynamic._as(B.C_JsonCodec.decode$2$reviver(0, A._asString(encryptedMessagesJson), _null)), new A.main__closure(privateKeyPem), type$.Map_String_dynamic);
+          result = A.List_List$_of(t1, t1.$ti._eval$1("ListIterable.E"));
+          B.DedicatedWorkerGlobalScope_methods.postMessage$1(_this.self, B.C_JsonCodec.encode$2$toEncodable(A.LinkedHashMap_LinkedHashMap$_literal(["cmd", "decrypted_messages", "messages", result], type$.String, type$.Object), _null));
         } else
           B.DedicatedWorkerGlobalScope_methods.postMessage$1(_this.self, "Unknown command: " + A.S(copy));
       }
     },
-    $signature: 173
+    $signature: 175
+  };
+  A.main__closure.prototype = {
+    call$1(msg) {
+      var decrypted, t1, t2, t3, t4, t5, modulus, privateExponent, p, q, rsaPrivateKey, cipher, pSub1, qSub1, encryptedBytes, out, exception,
+        _s12_ = "from_user_id",
+        _s9_ = "timestamp";
+      try {
+        t1 = J.getInterceptor$asx(msg);
+        t2 = A._asString(t1.$index(msg, "encrypted_data"));
+        t3 = type$.ASN1Sequence;
+        t4 = t3._as(new A.ASN1Parser(A.CryptoUtils_getBytesFromPEMString(A._asString(this.privateKeyPem))).nextObject$0()).elements;
+        if (2 >= t4.length)
+          return A.ioore(t4, 2);
+        t4 = t3._as(new A.ASN1Parser(t4[2].valueBytes).nextObject$0()).elements;
+        t3 = t4.length;
+        if (1 >= t3)
+          return A.ioore(t4, 1);
+        t5 = type$.ASN1Integer;
+        modulus = t5._as(t4[1]);
+        if (3 >= t3)
+          return A.ioore(t4, 3);
+        privateExponent = t5._as(t4[3]);
+        if (4 >= t3)
+          return A.ioore(t4, 4);
+        p = t5._as(t4[4]);
+        if (5 >= t3)
+          return A.ioore(t4, 5);
+        q = t5._as(t4[5]);
+        t4 = modulus.integer;
+        t4.toString;
+        t5 = privateExponent.integer;
+        t5.toString;
+        rsaPrivateKey = A.RSAPrivateKey$(t4, t5, p.integer, q.integer, null);
+        cipher = A.RSAEngine$();
+        type$.AsymmetricKeyParameter_RSAAsymmetricKey._as(new A.PrivateKeyParameter(rsaPrivateKey, type$.PrivateKeyParameter_RSAPrivateKey));
+        cipher.__RSAEngine__forEncryption_A = false;
+        cipher._key = rsaPrivateKey;
+        t3 = rsaPrivateKey.p;
+        t3.toString;
+        t4 = $.$get$_BigIntImpl_one();
+        pSub1 = t3.$sub(0, t4);
+        t5 = rsaPrivateKey.q;
+        qSub1 = t5.$sub(0, t4);
+        t4 = rsaPrivateKey.exponent;
+        cipher.__RSAEngine__dP_A = t4.remainder$1(0, pSub1);
+        cipher.__RSAEngine__dQ_A = t4.remainder$1(0, qSub1);
+        cipher.__RSAEngine__qInv_A = t5.modInverse$1(0, t3);
+        encryptedBytes = B.C_Base64Decoder.convert$1(t2);
+        t2 = cipher.get$outputBlockSize();
+        out = new Uint8Array(t2 + 1);
+        decrypted = B.C_Utf8Codec.decode$1(0, B.NativeUint8List_methods.sublist$2(out, 0, cipher.processBlock$5(encryptedBytes, 0, encryptedBytes.length, out, 0)));
+        t1 = A.LinkedHashMap_LinkedHashMap$_literal(["from_user_id", t1.$index(msg, _s12_), "content", decrypted, "timestamp", t1.$index(msg, _s9_)], type$.String, type$.dynamic);
+        return t1;
+      } catch (exception) {
+        t1 = J.getInterceptor$asx(msg);
+        t1 = A.LinkedHashMap_LinkedHashMap$_literal(["from_user_id", t1.$index(msg, _s12_), "content", "[\ud83d\udd12 \u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u0448\u0438\u0444\u0440\u043e\u0432\u0430\u0442\u044c]", "timestamp", t1.$index(msg, _s9_)], type$.String, type$.dynamic);
+        return t1;
+      }
+    },
+    $signature: 176
   };
   (function aliases() {
     var _ = J.Interceptor.prototype;
@@ -24516,70 +26507,73 @@
     _static_1(A, "async__AsyncRun__scheduleImmediateWithSetImmediate$closure", "_AsyncRun__scheduleImmediateWithSetImmediate", 2);
     _static_1(A, "async__AsyncRun__scheduleImmediateWithTimer$closure", "_AsyncRun__scheduleImmediateWithTimer", 2);
     _static_0(A, "async___startMicrotaskLoop$closure", "_startMicrotaskLoop", 0);
-    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 9);
-    _static(A, "brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160r1__make"], 175, 0);
-    _static(A, "brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160t1__make"], 176, 0);
-    _static(A, "brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192r1__make"], 177, 0);
-    _static(A, "brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192t1__make"], 178, 0);
-    _static(A, "brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224r1__make"], 179, 0);
-    _static(A, "brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224t1__make"], 180, 0);
-    _static(A, "brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256r1__make"], 181, 0);
-    _static(A, "brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256t1__make"], 182, 0);
-    _static(A, "brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320r1__make"], 183, 0);
-    _static(A, "brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320t1__make"], 184, 0);
-    _static(A, "brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384r1__make"], 185, 0);
-    _static(A, "brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384t1__make"], 186, 0);
-    _static(A, "brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512r1__make"], 187, 0);
-    _static(A, "brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512t1__make"], 188, 0);
-    _static(A, "gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_a__make"], 189, 0);
-    _static(A, "gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_b__make"], 190, 0);
-    _static(A, "gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_c__make"], 191, 0);
-    _static(A, "gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xcha__make"], 192, 0);
-    _static(A, "gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xchb__make"], 193, 0);
-    _static(A, "prime192v1_ECCurve_prime192v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v1__make"], 194, 0);
-    _static(A, "prime192v2_ECCurve_prime192v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v2__make"], 195, 0);
-    _static(A, "prime192v3_ECCurve_prime192v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v3__make"], 196, 0);
-    _static(A, "prime239v1_ECCurve_prime239v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v1__make"], 197, 0);
-    _static(A, "prime239v2_ECCurve_prime239v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v2__make"], 198, 0);
-    _static(A, "prime239v3_ECCurve_prime239v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v3__make"], 199, 0);
-    _static(A, "prime256v1_ECCurve_prime256v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime256v1__make"], 200, 0);
-    _static(A, "secp112r1_ECCurve_secp112r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r1__make"], 201, 0);
-    _static(A, "secp112r2_ECCurve_secp112r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r2__make"], 202, 0);
-    _static(A, "secp128r1_ECCurve_secp128r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r1__make"], 203, 0);
-    _static(A, "secp128r2_ECCurve_secp128r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r2__make"], 204, 0);
-    _static(A, "secp160k1_ECCurve_secp160k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160k1__make"], 205, 0);
-    _static(A, "secp160r1_ECCurve_secp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r1__make"], 206, 0);
-    _static(A, "secp160r2_ECCurve_secp160r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r2__make"], 207, 0);
-    _static(A, "secp192k1_ECCurve_secp192k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192k1__make"], 208, 0);
-    _static(A, "secp192r1_ECCurve_secp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192r1__make"], 209, 0);
-    _static(A, "secp224k1_ECCurve_secp224k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224k1__make"], 210, 0);
-    _static(A, "secp224r1_ECCurve_secp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224r1__make"], 211, 0);
-    _static(A, "secp256k1_ECCurve_secp256k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256k1__make"], 212, 0);
-    _static(A, "secp256r1_ECCurve_secp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256r1__make"], 213, 0);
-    _static(A, "secp384r1_ECCurve_secp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp384r1__make"], 214, 0);
-    _static(A, "secp521r1_ECCurve_secp521r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp521r1__make"], 215, 0);
-    _static(A, "ecc_fp___wNafMultiplier$closure", 3, null, ["call$3"], ["_wNafMultiplier"], 144, 0);
+    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 11);
+    _static(A, "brainpoolp160r1_ECCurve_brainpoolp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160r1__make"], 178, 0);
+    _static(A, "brainpoolp160t1_ECCurve_brainpoolp160t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp160t1__make"], 179, 0);
+    _static(A, "brainpoolp192r1_ECCurve_brainpoolp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192r1__make"], 180, 0);
+    _static(A, "brainpoolp192t1_ECCurve_brainpoolp192t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp192t1__make"], 181, 0);
+    _static(A, "brainpoolp224r1_ECCurve_brainpoolp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224r1__make"], 182, 0);
+    _static(A, "brainpoolp224t1_ECCurve_brainpoolp224t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp224t1__make"], 183, 0);
+    _static(A, "brainpoolp256r1_ECCurve_brainpoolp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256r1__make"], 184, 0);
+    _static(A, "brainpoolp256t1_ECCurve_brainpoolp256t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp256t1__make"], 185, 0);
+    _static(A, "brainpoolp320r1_ECCurve_brainpoolp320r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320r1__make"], 186, 0);
+    _static(A, "brainpoolp320t1_ECCurve_brainpoolp320t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp320t1__make"], 187, 0);
+    _static(A, "brainpoolp384r1_ECCurve_brainpoolp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384r1__make"], 188, 0);
+    _static(A, "brainpoolp384t1_ECCurve_brainpoolp384t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp384t1__make"], 189, 0);
+    _static(A, "brainpoolp512r1_ECCurve_brainpoolp512r1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512r1__make"], 190, 0);
+    _static(A, "brainpoolp512t1_ECCurve_brainpoolp512t1__make$closure", 6, null, ["call$6"], ["ECCurve_brainpoolp512t1__make"], 191, 0);
+    _static(A, "gostr3410_2001_cryptopro_a_ECCurve_gostr3410_2001_cryptopro_a__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_a__make"], 192, 0);
+    _static(A, "gostr3410_2001_cryptopro_b_ECCurve_gostr3410_2001_cryptopro_b__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_b__make"], 193, 0);
+    _static(A, "gostr3410_2001_cryptopro_c_ECCurve_gostr3410_2001_cryptopro_c__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_c__make"], 194, 0);
+    _static(A, "gostr3410_2001_cryptopro_xcha_ECCurve_gostr3410_2001_cryptopro_xcha__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xcha__make"], 195, 0);
+    _static(A, "gostr3410_2001_cryptopro_xchb_ECCurve_gostr3410_2001_cryptopro_xchb__make$closure", 6, null, ["call$6"], ["ECCurve_gostr3410_2001_cryptopro_xchb__make"], 196, 0);
+    _static(A, "prime192v1_ECCurve_prime192v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v1__make"], 197, 0);
+    _static(A, "prime192v2_ECCurve_prime192v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v2__make"], 198, 0);
+    _static(A, "prime192v3_ECCurve_prime192v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime192v3__make"], 199, 0);
+    _static(A, "prime239v1_ECCurve_prime239v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v1__make"], 200, 0);
+    _static(A, "prime239v2_ECCurve_prime239v2__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v2__make"], 201, 0);
+    _static(A, "prime239v3_ECCurve_prime239v3__make$closure", 6, null, ["call$6"], ["ECCurve_prime239v3__make"], 202, 0);
+    _static(A, "prime256v1_ECCurve_prime256v1__make$closure", 6, null, ["call$6"], ["ECCurve_prime256v1__make"], 203, 0);
+    _static(A, "secp112r1_ECCurve_secp112r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r1__make"], 204, 0);
+    _static(A, "secp112r2_ECCurve_secp112r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp112r2__make"], 205, 0);
+    _static(A, "secp128r1_ECCurve_secp128r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r1__make"], 206, 0);
+    _static(A, "secp128r2_ECCurve_secp128r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp128r2__make"], 207, 0);
+    _static(A, "secp160k1_ECCurve_secp160k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160k1__make"], 208, 0);
+    _static(A, "secp160r1_ECCurve_secp160r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r1__make"], 209, 0);
+    _static(A, "secp160r2_ECCurve_secp160r2__make$closure", 6, null, ["call$6"], ["ECCurve_secp160r2__make"], 210, 0);
+    _static(A, "secp192k1_ECCurve_secp192k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192k1__make"], 211, 0);
+    _static(A, "secp192r1_ECCurve_secp192r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp192r1__make"], 212, 0);
+    _static(A, "secp224k1_ECCurve_secp224k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224k1__make"], 213, 0);
+    _static(A, "secp224r1_ECCurve_secp224r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp224r1__make"], 214, 0);
+    _static(A, "secp256k1_ECCurve_secp256k1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256k1__make"], 215, 0);
+    _static(A, "secp256r1_ECCurve_secp256r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp256r1__make"], 216, 0);
+    _static(A, "secp384r1_ECCurve_secp384r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp384r1__make"], 217, 0);
+    _static(A, "secp521r1_ECCurve_secp521r1__make$closure", 6, null, ["call$6"], ["ECCurve_secp521r1__make"], 218, 0);
+    _static(A, "ecc_fp___wNafMultiplier$closure", 3, null, ["call$3"], ["_wNafMultiplier"], 145, 0);
   })();
   (function inheritance() {
     var _mixin = hunkHelpers.mixin,
       _inherit = hunkHelpers.inherit,
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
-    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A._CopyingBytesBuilder, A.Error, A.SentinelValue, A.Iterable, A.ListIterator, A.EmptyIterator, A.FixedLengthListMixin, A.ConstantMap, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A._StackTrace, A.Closure, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapEntryIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A._Cell, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A.AsyncError, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A.Stream, A._Zone, A.SetBase, A._LinkedHashSetCell, A._LinkedHashSetIterator, A.ListBase, A.Codec, A.Converter, A._Base64Encoder, A._Base64Decoder, A._JsonStringifier, A._Utf8Encoder, A._Utf8Decoder, A._BigIntImpl, A._BigIntClassic, A.DateTime, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.IntegerDivisionByZeroException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A.CssStyleDeclarationBase, A.EventStreamProvider, A._EventStreamSubscription, A.ImmutableListMixin, A.FixedSizeListIterator, A._StructuredClone, A._AcceptStructuredClone, A.NullRejectionException, A._JSSecureRandom, A.Endian, A.BaseBlockCipher, A.AsymmetricKeyPair, A.CipherParameters, A.KeyGeneratorParameters, A.PaddedBlockCipherParameters, A.ParametersWithIV, A.RegistryFactoryException, A.ASN1Object, A.UnsupportedAsn1EncodingRuleException, A.UnsupportedObjectIdentifierException, A.RSAAsymmetricKey, A.BaseAsymmetricBlockCipher, A.DesBase, A.BaseAEADBlockCipher, A.BaseDigest, A.ECDomainParametersImpl, A.ECFieldElementBase, A.ECPointBase, A.ECCurveBase, A._WNafPreCompInfo, A.BaseKeyDerivator, A.PKCS12ParametersGenerator, A.PKCS5S1ParameterGenerator, A.ECKeyGenerator, A.RSAKeyGenerator, A.BaseMac, A.PaddedBlockCipherImpl, A.BasePadding, A.AutoSeedBlockCtrRandom, A.SecureRandomBase, A.FortunaRandom, A.ECDSASigner, A.PSSSigner, A.RSASigner, A.BaseAEADCipher, A.BaseStreamCipher, A.Platform, A.PlatformException, A.FactoryConfig, A._RegistryImpl, A.Register64, A.Register64List]);
+    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A._CopyingBytesBuilder, A.Error, A.ListBase, A.SentinelValue, A.Iterable, A.ListIterator, A.MappedIterator, A.WhereIterator, A.EmptyIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.ConstantMap, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A._StackTrace, A.Closure, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapEntryIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A._Cell, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A.AsyncError, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A.Stream, A._Zone, A.SetBase, A._LinkedHashSetCell, A._LinkedHashSetIterator, A.Codec, A.Converter, A._Base64Encoder, A._Base64Decoder, A._JsonStringifier, A._LineSplitIterator, A._Utf8Encoder, A._Utf8Decoder, A._BigIntImpl, A._BigIntClassic, A.DateTime, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.IntegerDivisionByZeroException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A.CssStyleDeclarationBase, A.EventStreamProvider, A._EventStreamSubscription, A.ImmutableListMixin, A.FixedSizeListIterator, A._StructuredClone, A._AcceptStructuredClone, A.NullRejectionException, A._JSSecureRandom, A.Endian, A.BaseBlockCipher, A.AsymmetricKeyPair, A.AsymmetricKeyParameter, A.CipherParameters, A.KeyGeneratorParameters, A.PaddedBlockCipherParameters, A.ParametersWithIV, A.RegistryFactoryException, A.ASN1Object, A.ASN1Parser, A.UnsupportedAsn1EncodingRuleException, A.UnsupportedASN1TagException, A.UnsupportedObjectIdentifierException, A.RSAAsymmetricKey, A.BaseAsymmetricBlockCipher, A.DesBase, A.BaseAEADBlockCipher, A.BaseDigest, A.ECDomainParametersImpl, A.ECFieldElementBase, A.ECPointBase, A.ECCurveBase, A._WNafPreCompInfo, A.BaseKeyDerivator, A.PKCS12ParametersGenerator, A.PKCS5S1ParameterGenerator, A.ECKeyGenerator, A.RSAKeyGenerator, A.BaseMac, A.PaddedBlockCipherImpl, A.BasePadding, A.AutoSeedBlockCtrRandom, A.SecureRandomBase, A.FortunaRandom, A.ECDSASigner, A.PSSSigner, A.RSASigner, A.BaseAEADCipher, A.BaseStreamCipher, A.Platform, A.PlatformException, A.FactoryConfig, A._RegistryImpl, A.Register64, A.Register64List]);
     _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JavaScriptBigInt, J.JavaScriptSymbol, J.JSNumber, J.JSString]);
     _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.NativeByteBuffer, A.NativeTypedData, A.EventTarget, A.AccessibleNodeList, A.Blob, A.CssTransformComponent, A.CssRule, A._CssStyleDeclaration_JavaScriptObject_CssStyleDeclarationBase, A.CssStyleValue, A.DataTransferItemList, A.DomException, A._DomRectList_JavaScriptObject_ListMixin, A.DomRectReadOnly, A._DomStringList_JavaScriptObject_ListMixin, A.DomTokenList, A.Event, A._FileList_JavaScriptObject_ListMixin, A.Gamepad, A.History, A._HtmlCollection_JavaScriptObject_ListMixin, A.ImageData, A.Location, A.MediaList, A._MidiInputMap_JavaScriptObject_MapMixin, A._MidiOutputMap_JavaScriptObject_MapMixin, A.MimeType, A._MimeTypeArray_JavaScriptObject_ListMixin, A._NodeList_JavaScriptObject_ListMixin, A.Plugin, A._PluginArray_JavaScriptObject_ListMixin, A._RtcStatsReport_JavaScriptObject_MapMixin, A.SharedArrayBuffer, A.SpeechGrammar, A._SpeechGrammarList_JavaScriptObject_ListMixin, A.SpeechRecognitionResult, A._Storage_JavaScriptObject_MapMixin, A.StyleSheet, A._TextTrackCueList_JavaScriptObject_ListMixin, A.TimeRanges, A.Touch, A._TouchList_JavaScriptObject_ListMixin, A.TrackDefaultList, A.Url, A.__CssRuleList_JavaScriptObject_ListMixin, A.__GamepadList_JavaScriptObject_ListMixin, A.__NamedNodeMap_JavaScriptObject_ListMixin, A.__SpeechRecognitionResultList_JavaScriptObject_ListMixin, A.__StyleSheetList_JavaScriptObject_ListMixin, A.Length, A._LengthList_JavaScriptObject_ListMixin, A.Number, A._NumberList_JavaScriptObject_ListMixin, A.PointList, A._StringList_JavaScriptObject_ListMixin, A.Transform, A._TransformList_JavaScriptObject_ListMixin, A.AudioBuffer, A._AudioParamMap_JavaScriptObject_MapMixin]);
     _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction]);
     _inherit(J.JSUnmodifiableArray, J.JSArray);
     _inheritMany(J.JSNumber, [J.JSInt, J.JSNumNotInt]);
     _inheritMany(A.Error, [A.LateError, A.TypeError, A.JsNoSuchMethodError, A.UnknownJsTypeError, A.RuntimeError, A._Error, A.JsonUnsupportedObjectError, A.AssertionError, A.ArgumentError, A.UnsupportedError, A.UnimplementedError, A.StateError, A.ConcurrentModificationError]);
-    _inherit(A.EfficientLengthIterable, A.Iterable);
+    _inherit(A.UnmodifiableListBase, A.ListBase);
+    _inherit(A.CodeUnits, A.UnmodifiableListBase);
+    _inheritMany(A.Iterable, [A.EfficientLengthIterable, A.MappedIterable, A.WhereIterable, A._LineSplitIterable]);
     _inheritMany(A.EfficientLengthIterable, [A.ListIterable, A.EmptyIterable, A.LinkedHashMapKeysIterable, A.LinkedHashMapEntriesIterable]);
-    _inheritMany(A.ListIterable, [A.SubListIterable, A.MappedListIterable, A.ReversedListIterable]);
+    _inheritMany(A.ListIterable, [A.SubListIterable, A.MappedListIterable, A.ReversedListIterable, A._JsonMapKeyIterable]);
+    _inherit(A.EfficientLengthMappedIterable, A.MappedIterable);
     _inherit(A.ConstantStringMap, A.ConstantMap);
     _inherit(A.NullError, A.TypeError);
-    _inheritMany(A.Closure, [A.Closure0Args, A.Closure2Args, A.TearOffClosure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A.Stream_length_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._BigIntImpl_hashCode_finish, A._EventStreamSubscription_closure, A.promiseToFuture_closure, A.promiseToFuture_closure0, A._wNafMultiplier_closure, A.HKDFKeyDerivator__getBlockLengthFromDigest_closure, A._escapeRegExp_closure, A._escapeRegExp_closure0, A.main_closure]);
+    _inheritMany(A.Closure, [A.Closure0Args, A.Closure2Args, A.TearOffClosure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A.Stream_length_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._BigIntImpl_hashCode_finish, A.DateTime_parse_parseIntOrZero, A.DateTime_parse_parseMilliAndMicroseconds, A._EventStreamSubscription_closure, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.CryptoUtils_getBytesFromPEMString_closure, A.CryptoUtils_getBytesFromPEMString_closure0, A._wNafMultiplier_closure, A.HKDFKeyDerivator__getBlockLengthFromDigest_closure, A._escapeRegExp_closure, A._escapeRegExp_closure0, A.main_closure, A.main__closure]);
     _inheritMany(A.TearOffClosure, [A.StaticClosure, A.BoundClosure]);
-    _inherit(A.JsLinkedHashMap, A.MapBase);
+    _inheritMany(A.MapBase, [A.JsLinkedHashMap, A._JsonMap]);
     _inheritMany(A.Closure2Args, [A.initHooks_closure0, A._Future__propagateToListeners_handleWhenCompleteCallback_closure0, A.MapBase_mapToString_closure, A._JsonStringifier_writeMap_closure, A._BigIntImpl_hashCode_combine, A.MidiInputMap_keys_closure, A.MidiOutputMap_keys_closure, A.RtcStatsReport_keys_closure, A.Storage_keys_closure, A._StructuredClone_walk_closure, A._StructuredClone_walk_closure0, A._AcceptStructuredClone_walk_closure, A.AudioParamMap_keys_closure, A.OAEPEncoding_factoryConfig_closure, A.PKCS1Encoding_factoryConfig_closure, A.CBCBlockCipher_factoryConfig_closure, A.CCMBlockCipher_factoryConfig_closure, A.CFBBlockCipher_factoryConfig_closure, A.CTRBlockCipher_factoryConfig_closure, A.ECBBlockCipher_factoryConfig_closure, A.GCMBlockCipher_factoryConfig_closure, A.GCTRBlockCipher_factoryConfig_closure, A.IGEBlockCipher_factoryConfig_closure, A.OFBBlockCipher_factoryConfig_closure, A.SICBlockCipher_factoryConfig_closure, A.CSHAKEDigest_factoryConfig_closure, A.KeccakDigest_factoryConfig_closure, A.SHA3Digest_factoryConfig_closure, A.SHA512tDigest_factoryConfig_closure, A.SHAKEDigest_factoryConfig_closure, A.ConcatKDFDerivator_factoryConfig_closure, A.HKDFKeyDerivator_factoryConfig_closure, A.PBKDF2KeyDerivator_factoryConfig_closure, A.PKCS12ParametersGenerator_factoryConfig_closure, A.PKCS5S1ParameterGenerator_factoryConfig_closure, A.CBCBlockCipherMac_factoryConfig_closure, A.CMac_factoryConfig_closure, A.HMac_factoryConfig_closure, A.Poly1305_factoryConfig_closure, A.PaddedBlockCipherImpl_factoryConfig_closure, A.AutoSeedBlockCtrRandom_factoryConfig_closure, A.BlockCtrRandom_factoryConfig_closure, A.ECDSASigner_factoryConfig_closure, A.PSSSigner_factoryConfig_closure, A.RSASigner_factoryConfig_closure, A.ChaCha20Engine_factoryConfig_closure, A.ChaCha7539Engine_factoryConfig_closure, A.CTRStreamCipher_factoryConfig_closure, A.EAX_factoryConfig_closure, A.SICStreamCipher_factoryConfig_closure]);
     _inheritMany(A.NativeTypedData, [A.NativeByteData, A.NativeTypedArray]);
     _inheritMany(A.NativeTypedArray, [A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin, A._NativeTypedArrayOfInt_NativeTypedArray_ListMixin]);
@@ -24595,8 +26589,11 @@
     _inherit(A._RootZone, A._Zone);
     _inherit(A._SetBase, A.SetBase);
     _inherit(A._LinkedHashSet, A._SetBase);
-    _inheritMany(A.Codec, [A.Base64Codec, A.JsonCodec]);
-    _inheritMany(A.Converter, [A.Base64Encoder, A.Base64Decoder, A.JsonEncoder, A.Utf8Encoder, A.Utf8Decoder]);
+    _inheritMany(A.Codec, [A.Encoding, A.Base64Codec, A.JsonCodec]);
+    _inheritMany(A.Encoding, [A.AsciiCodec, A.Utf8Codec]);
+    _inheritMany(A.Converter, [A._UnicodeSubsetEncoder, A._UnicodeSubsetDecoder, A.Base64Encoder, A.Base64Decoder, A.JsonEncoder, A.JsonDecoder, A.Utf8Encoder, A.Utf8Decoder]);
+    _inherit(A.AsciiEncoder, A._UnicodeSubsetEncoder);
+    _inherit(A.AsciiDecoder, A._UnicodeSubsetDecoder);
     _inherit(A.JsonCyclicError, A.JsonUnsupportedObjectError);
     _inherit(A._JsonStringStringifier, A._JsonStringifier);
     _inheritMany(A.ArgumentError, [A.RangeError, A.IndexError]);
@@ -24664,8 +26661,9 @@
     _inherit(A.OfflineAudioContext, A.BaseAudioContext);
     _inheritMany(A.BaseBlockCipher, [A.StreamCipherAsBlockCipher, A.AESEngine, A.CBCBlockCipher, A.CFBBlockCipher, A.ECBBlockCipher, A.GCTRBlockCipher, A.IGEBlockCipher, A.OFBBlockCipher, A.RC2Engine]);
     _inheritMany(A.CipherParameters, [A.KeyParameter, A.Pbkdf2Parameters]);
+    _inherit(A.PrivateKeyParameter, A.AsymmetricKeyParameter);
     _inherit(A.ASN1EncodingRule, A._Enum);
-    _inheritMany(A.ASN1Object, [A.ASN1BitString, A.ASN1Integer, A.ASN1ObjectIdentifier, A.ASN1OctetString, A.ASN1Sequence]);
+    _inheritMany(A.ASN1Object, [A.ASN1BitString, A.ASN1BMPString, A.ASN1Boolean, A.ASN1GeneralizedTime, A.ASN1IA5String, A.ASN1Integer, A.ASN1Null, A.ASN1ObjectIdentifier, A.ASN1OctetString, A.ASN1PrintableString, A.ASN1Sequence, A.ASN1Set, A.ASN1TeletextString, A.ASN1UtcTime, A.ASN1UTF8String]);
     _inheritMany(A.RSAAsymmetricKey, [A.RSAPrivateKey, A.RSAPublicKey]);
     _inheritMany(A.BaseAsymmetricBlockCipher, [A.OAEPEncoding, A.PKCS1Encoding, A.RSAEngine]);
     _inherit(A.DESedeEngine, A.DesBase);
@@ -24690,6 +26688,7 @@
     _inheritMany(A.BaseStreamCipher, [A.ChaCha20Engine, A.ChaCha7539Engine, A.SICStreamCipher, A.RC4Engine, A.Salsa20Engine]);
     _inherit(A.CTRStreamCipher, A.SICStreamCipher);
     _inherit(A.EAX, A.BaseAEADCipher);
+    _mixin(A.UnmodifiableListBase, A.UnmodifiableListMixin);
     _mixin(A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin, A.ListBase);
     _mixin(A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin_FixedLengthListMixin, A.FixedLengthListMixin);
     _mixin(A._NativeTypedArrayOfInt_NativeTypedArray_ListMixin, A.ListBase);
@@ -24748,13 +26747,13 @@
     typeUniverse: {eC: new Map(), tR: {}, eT: {}, tPV: {}, sEA: []},
     mangledGlobalNames: {int: "int", double: "double", num: "num", String: "String", bool: "bool", Null: "Null", List: "List", Object: "Object", Map: "Map"},
     mangledNames: {},
-    types: ["~()", "~(String,@)", "~(~())", "Null(@)", "Null()", "~(Object?,Object?)", "@()", "~(@)", "SHA1Digest()", "@(@)", "WhirlpoolDigest()", "int(int)", "@(@,String)", "~(String,String)", "~(Event)", "~(@,@)", "Null(@,@)", "@(@,@)", "Null(Object,StackTrace)", "OAEPEncoding()(String,Match)", "OAEPEncoding()", "Null(~())", "PKCS1Encoding()(String,Match)", "PKCS1Encoding()", "RSAEngine()", "AESEngine()", "DESedeEngine()", "CBCBlockCipher()(String,Match)", "CBCBlockCipher()", "CCMBlockCipher()(String,Match)", "CCMBlockCipher()", "CFBBlockCipher()(String,Match)", "CFBBlockCipher()", "CTRBlockCipher()(String,Match)", "CTRBlockCipher()", "ECBBlockCipher()(String,Match)", "ECBBlockCipher()", "GCMBlockCipher()(String,Match)", "GCMBlockCipher()", "GCTRBlockCipher()(String,Match)", "GCTRBlockCipher()", "IGEBlockCipher()(String,Match)", "IGEBlockCipher()", "OFBBlockCipher()(String,Match)", "OFBBlockCipher()", "SICBlockCipher()(String,Match)", "SICBlockCipher()", "RC2Engine()", "Blake2bDigest()", "CSHAKEDigest()(String,Match)", "CSHAKEDigest()", "KeccakDigest()(String,Match)", "KeccakDigest()", "MD2Digest()", "MD4Digest()", "MD5Digest()", "RIPEMD128Digest()", "RIPEMD160Digest()", "RIPEMD256Digest()", "RIPEMD320Digest()", "SHA224Digest()", "SHA256Digest()", "SHA3Digest()(String,Match)", "SHA3Digest()", "SHA384Digest()", "SHA512Digest()", "SHA512tDigest()(String,Match)", "SHA512tDigest()", "SHAKEDigest()(String,Match)", "SHAKEDigest()", "SM3Digest()", "TigerDigest()", "@(String)", "ECCurve_brainpoolp160r1()", "ECCurve_brainpoolp160t1()", "ECCurve_brainpoolp192r1()", "ECCurve_brainpoolp192t1()", "ECCurve_brainpoolp224r1()", "ECCurve_brainpoolp224t1()", "ECCurve_brainpoolp256r1()", "ECCurve_brainpoolp256t1()", "ECCurve_brainpoolp320r1()", "ECCurve_brainpoolp320t1()", "ECCurve_brainpoolp384r1()", "ECCurve_brainpoolp384t1()", "ECCurve_brainpoolp512r1()", "ECCurve_brainpoolp512t1()", "ECCurve_gostr3410_2001_cryptopro_a()", "ECCurve_gostr3410_2001_cryptopro_b()", "ECCurve_gostr3410_2001_cryptopro_c()", "ECCurve_gostr3410_2001_cryptopro_xcha()", "ECCurve_gostr3410_2001_cryptopro_xchb()", "ECCurve_prime192v1()", "ECCurve_prime192v2()", "ECCurve_prime192v3()", "ECCurve_prime239v1()", "ECCurve_prime239v2()", "ECCurve_prime239v3()", "ECCurve_prime256v1()", "ECCurve_secp112r1()", "ECCurve_secp112r2()", "ECCurve_secp128r1()", "ECCurve_secp128r2()", "ECCurve_secp160k1()", "ECCurve_secp160r1()", "ECCurve_secp160r2()", "ECCurve_secp192k1()", "ECCurve_secp192r1()", "ECCurve_secp224k1()", "ECCurve_secp224r1()", "ECCurve_secp256k1()", "ECCurve_secp256r1()", "ECCurve_secp384r1()", "ECCurve_secp521r1()", "ECPoint(ECPoint?)", "Argon2BytesGenerator()", "ConcatKDFDerivator()(String,Match)", "ConcatKDFDerivator()", "ECDHKeyDerivator()", "HKDFKeyDerivator()(String,Match)", "HKDFKeyDerivator()", "bool(MapEntry<String,int>)", "PBKDF2KeyDerivator()(String,Match)", "PBKDF2KeyDerivator()", "PKCS12ParametersGenerator()(String,Match)", "PKCS12ParametersGenerator()", "PKCS5S1ParameterGenerator()(String,Match)", "PKCS5S1ParameterGenerator()", "Scrypt()", "ECKeyGenerator()", "RSAKeyGenerator()", "CBCBlockCipherMac()(String,Match)", "CBCBlockCipherMac()", "CMac()(String,Match)", "CMac()", "HMac()(String,Match)", "HMac()", "Poly1305()(String,Match)", "Poly1305()", "PaddedBlockCipherImpl()(String,Match)", "PaddedBlockCipherImpl()", "ISO7816d4Padding()", "PKCS7Padding()", "AutoSeedBlockCtrRandom()(String,Match)", "ECPointBase?(ECPointBase,BigInt?,PreCompInfo?)", "BigInt()", "Uint8List()", "BlockCtrRandom()(String,Match)", "BlockCtrRandom()", "FortunaRandom()", "ECDSASigner()(String,Match)", "ECDSASigner()", "PSSSigner()(String,Match)", "PSSSigner()", "RSASigner()(String,Match)", "RSASigner()", "String(Match)", "String(String)", "Map<String,@()>()", "Set<DynamicFactoryConfig>()", "ChaCha20Engine()(String,Match)", "ChaCha20Engine()", "ChaCha20Poly1305()", "ChaCha7539Engine()(String,Match)", "ChaCha7539Engine()", "CTRStreamCipher()(String,Match)", "CTRStreamCipher()", "EAX()(String,Match)", "EAX()", "RC4Engine()", "Salsa20Engine()", "SICStreamCipher()(String,Match)", "SICStreamCipher()", "~(MessageEvent)", "int(int,int)", "ECCurve_brainpoolp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp160t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224t1(String,ECCurve0,ECPoint0,BigInt,BigInt?,List<int>?)", "ECCurve_brainpoolp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp256t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_a(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_b(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_c(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xcha(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xchb(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_prime192v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime256v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp192k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp224k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp256k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp521r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "AutoSeedBlockCtrRandom()"],
+    types: ["~()", "~(String,@)", "~(~())", "Null(@)", "Null()", "~(Object?,Object?)", "@()", "int(String?)", "~(@)", "String(String)", "SHA1Digest()", "@(@)", "SM3Digest()", "Null(Object,StackTrace)", "~(String,String)", "~(Event)", "~(@,@)", "Null(@,@)", "@(@,@)", "Null(~())", "@(String)", "bool(String)", "OAEPEncoding()(String,Match)", "OAEPEncoding()", "int(int,int)", "PKCS1Encoding()(String,Match)", "PKCS1Encoding()", "RSAEngine()", "AESEngine()", "DESedeEngine()", "CBCBlockCipher()(String,Match)", "CBCBlockCipher()", "CCMBlockCipher()(String,Match)", "CCMBlockCipher()", "CFBBlockCipher()(String,Match)", "CFBBlockCipher()", "CTRBlockCipher()(String,Match)", "CTRBlockCipher()", "ECBBlockCipher()(String,Match)", "ECBBlockCipher()", "GCMBlockCipher()(String,Match)", "GCMBlockCipher()", "GCTRBlockCipher()(String,Match)", "GCTRBlockCipher()", "IGEBlockCipher()(String,Match)", "IGEBlockCipher()", "OFBBlockCipher()(String,Match)", "OFBBlockCipher()", "SICBlockCipher()(String,Match)", "SICBlockCipher()", "RC2Engine()", "Blake2bDigest()", "CSHAKEDigest()(String,Match)", "CSHAKEDigest()", "KeccakDigest()(String,Match)", "KeccakDigest()", "MD2Digest()", "MD4Digest()", "MD5Digest()", "RIPEMD128Digest()", "RIPEMD160Digest()", "RIPEMD256Digest()", "RIPEMD320Digest()", "SHA224Digest()", "SHA256Digest()", "SHA3Digest()(String,Match)", "SHA3Digest()", "SHA384Digest()", "SHA512Digest()", "SHA512tDigest()(String,Match)", "SHA512tDigest()", "SHAKEDigest()(String,Match)", "SHAKEDigest()", "int(int)", "TigerDigest()", "WhirlpoolDigest()", "ECCurve_brainpoolp160r1()", "ECCurve_brainpoolp160t1()", "ECCurve_brainpoolp192r1()", "ECCurve_brainpoolp192t1()", "ECCurve_brainpoolp224r1()", "ECCurve_brainpoolp224t1()", "ECCurve_brainpoolp256r1()", "ECCurve_brainpoolp256t1()", "ECCurve_brainpoolp320r1()", "ECCurve_brainpoolp320t1()", "ECCurve_brainpoolp384r1()", "ECCurve_brainpoolp384t1()", "ECCurve_brainpoolp512r1()", "ECCurve_brainpoolp512t1()", "ECCurve_gostr3410_2001_cryptopro_a()", "ECCurve_gostr3410_2001_cryptopro_b()", "ECCurve_gostr3410_2001_cryptopro_c()", "ECCurve_gostr3410_2001_cryptopro_xcha()", "ECCurve_gostr3410_2001_cryptopro_xchb()", "ECCurve_prime192v1()", "ECCurve_prime192v2()", "ECCurve_prime192v3()", "ECCurve_prime239v1()", "ECCurve_prime239v2()", "ECCurve_prime239v3()", "ECCurve_prime256v1()", "ECCurve_secp112r1()", "ECCurve_secp112r2()", "ECCurve_secp128r1()", "ECCurve_secp128r2()", "ECCurve_secp160k1()", "ECCurve_secp160r1()", "ECCurve_secp160r2()", "ECCurve_secp192k1()", "ECCurve_secp192r1()", "ECCurve_secp224k1()", "ECCurve_secp224r1()", "ECCurve_secp256k1()", "ECCurve_secp256r1()", "ECCurve_secp384r1()", "ECCurve_secp521r1()", "ECPoint(ECPoint?)", "Argon2BytesGenerator()", "ConcatKDFDerivator()(String,Match)", "ConcatKDFDerivator()", "ECDHKeyDerivator()", "HKDFKeyDerivator()(String,Match)", "HKDFKeyDerivator()", "bool(MapEntry<String,int>)", "PBKDF2KeyDerivator()(String,Match)", "PBKDF2KeyDerivator()", "PKCS12ParametersGenerator()(String,Match)", "PKCS12ParametersGenerator()", "PKCS5S1ParameterGenerator()(String,Match)", "PKCS5S1ParameterGenerator()", "Scrypt()", "ECKeyGenerator()", "RSAKeyGenerator()", "CBCBlockCipherMac()(String,Match)", "CBCBlockCipherMac()", "CMac()(String,Match)", "CMac()", "HMac()(String,Match)", "HMac()", "Poly1305()(String,Match)", "Poly1305()", "PaddedBlockCipherImpl()(String,Match)", "PaddedBlockCipherImpl()", "ISO7816d4Padding()", "ECPointBase?(ECPointBase,BigInt?,PreCompInfo?)", "AutoSeedBlockCtrRandom()(String,Match)", "AutoSeedBlockCtrRandom()", "BigInt()", "Uint8List()", "BlockCtrRandom()(String,Match)", "BlockCtrRandom()", "FortunaRandom()", "ECDSASigner()(String,Match)", "ECDSASigner()", "PSSSigner()(String,Match)", "PSSSigner()", "RSASigner()(String,Match)", "RSASigner()", "String(Match)", "Map<String,@()>()", "Set<DynamicFactoryConfig>()", "ChaCha20Engine()(String,Match)", "ChaCha20Engine()", "ChaCha20Poly1305()", "ChaCha7539Engine()(String,Match)", "ChaCha7539Engine()", "CTRStreamCipher()(String,Match)", "CTRStreamCipher()", "EAX()(String,Match)", "EAX()", "RC4Engine()", "Salsa20Engine()", "SICStreamCipher()(String,Match)", "SICStreamCipher()", "~(MessageEvent)", "Map<String,@>(@)", "@(@,String)", "ECCurve_brainpoolp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp160t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp192t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp224t1(String,ECCurve0,ECPoint0,BigInt,BigInt?,List<int>?)", "ECCurve_brainpoolp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp256t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp320t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp384t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_brainpoolp512t1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_a(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_b(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_c(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xcha(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_gostr3410_2001_cryptopro_xchb(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_prime192v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime192v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime239v3(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_prime256v1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp112r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp128r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp160r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp160r2(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp192k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp192r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp224k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp224r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp256k1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>?)", "ECCurve_secp256r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp384r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "ECCurve_secp521r1(String,ECCurve0,ECPoint0,BigInt,BigInt,List<int>)", "PKCS7Padding()"],
     interceptorsByTag: null,
     leafTags: null,
     arrayRti: Symbol("$ti")
   };
-  A._Universe_addRules(init.typeUniverse, JSON.parse('{"PlainJavaScriptObject":"LegacyJavaScriptObject","UnknownJavaScriptObject":"LegacyJavaScriptObject","JavaScriptFunction":"LegacyJavaScriptObject","KeyframeEffect":"JavaScriptObject","KeyframeEffectReadOnly":"JavaScriptObject","AnimationEffectReadOnly":"JavaScriptObject","AbortPaymentEvent":"Event","ExtendableEvent":"Event","AudioContext":"BaseAudioContext","AbsoluteOrientationSensor":"EventTarget","OrientationSensor":"EventTarget","Sensor":"EventTarget","MathMLElement":"Element","AudioElement":"HtmlElement","MediaElement":"HtmlElement","HtmlDocument":"Node","Document":"Node","VttCue":"TextTrackCue","ServiceWorkerGlobalScope":"WorkerGlobalScope","CDataSection":"CharacterData","Text":"CharacterData","HtmlFormControlsCollection":"HtmlCollection","CssCharsetRule":"CssRule","CssMatrixComponent":"CssTransformComponent","CssStyleSheet":"StyleSheet","CssurlImageValue":"CssStyleValue","CssImageValue":"CssStyleValue","CssResourceValue":"CssStyleValue","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"Null":[],"TrustedGetRuntimeType":[]},"JavaScriptObject":{"JSObject":[]},"LegacyJavaScriptObject":{"JSObject":[]},"JSArray":{"List":["1"],"JSObject":[],"Iterable":["1"],"JSIndexable":["1"]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"JSObject":[],"Iterable":["1"],"JSIndexable":["1"]},"JSNumber":{"double":[],"num":[]},"JSInt":{"double":[],"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"double":[],"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"Pattern":[],"JSIndexable":["@"],"TrustedGetRuntimeType":[]},"_CopyingBytesBuilder":{"BytesBuilder":[]},"LateError":{"Error":[]},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"Iterable":["1"]},"SubListIterable":{"ListIterable":["1"],"Iterable":["1"],"ListIterable.E":"1"},"MappedListIterable":{"ListIterable":["2"],"Iterable":["2"],"ListIterable.E":"2"},"EmptyIterable":{"Iterable":["1"]},"ReversedListIterable":{"ListIterable":["1"],"Iterable":["1"],"ListIterable.E":"1"},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"NullError":{"TypeError":[],"Error":[]},"JsNoSuchMethodError":{"Error":[]},"UnknownJsTypeError":{"Error":[]},"_StackTrace":{"StackTrace":[]},"Closure":{"Function":[]},"Closure0Args":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"RuntimeError":{"Error":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"LinkedHashMap":["1","2"],"Map":["1","2"],"MapBase.K":"1","MapBase.V":"2"},"LinkedHashMapKeysIterable":{"Iterable":["1"]},"LinkedHashMapEntriesIterable":{"Iterable":["MapEntry<1,2>"]},"JSSyntaxRegExp":{"RegExp":[],"Pattern":[]},"_MatchImplementation":{"RegExpMatch":[],"Match":[]},"NativeByteBuffer":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedData":{"JSObject":[]},"NativeByteData":{"NativeTypedData":[],"ByteData":[],"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedArray":{"NativeTypedData":[],"JavaScriptIndexingBehavior":["1"],"JSObject":[],"JSIndexable":["1"]},"NativeTypedArrayOfDouble":{"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"]},"NativeTypedArrayOfInt":{"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"]},"NativeFloat32List":{"NativeTypedArrayOfDouble":[],"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeFloat64List":{"NativeTypedArrayOfDouble":[],"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeInt16List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt32List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt8List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint16List":{"NativeTypedArrayOfInt":[],"Uint16List":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint32List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8ClampedList":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8List":{"NativeTypedArrayOfInt":[],"Uint8List":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"_Type":{"Type":[]},"_Error":{"Error":[]},"_TypeError":{"TypeError":[],"Error":[]},"AsyncError":{"Error":[]},"_AsyncCompleter":{"_Completer":["1"]},"_Future":{"Future":["1"]},"_Zone":{"Zone":[]},"_RootZone":{"_Zone":[],"Zone":[]},"_LinkedHashSet":{"SetBase":["1"],"Set":["1"],"Iterable":["1"]},"MapBase":{"Map":["1","2"]},"SetBase":{"Set":["1"],"Iterable":["1"]},"_SetBase":{"SetBase":["1"],"Set":["1"],"Iterable":["1"]},"Base64Codec":{"Codec":["List<int>","String"],"Codec.S":"List<int>"},"JsonUnsupportedObjectError":{"Error":[]},"JsonCyclicError":{"Error":[]},"JsonCodec":{"Codec":["Object?","String"],"Codec.S":"Object?"},"double":{"num":[]},"int":{"num":[]},"List":{"Iterable":["1"]},"RegExpMatch":{"Match":[]},"Set":{"Iterable":["1"]},"String":{"Pattern":[]},"_BigIntImpl":{"BigInt":[]},"AssertionError":{"Error":[]},"TypeError":{"Error":[]},"ArgumentError":{"Error":[]},"RangeError":{"Error":[]},"IndexError":{"Error":[]},"UnsupportedError":{"Error":[]},"UnimplementedError":{"UnsupportedError":[],"Error":[]},"StateError":{"Error":[]},"ConcurrentModificationError":{"Error":[]},"OutOfMemoryError":{"Error":[]},"StackOverflowError":{"Error":[]},"IntegerDivisionByZeroException":{"UnsupportedError":[],"Error":[]},"_StringStackTrace":{"StackTrace":[]},"StringBuffer":{"StringSink":[]},"CssRule":{"JSObject":[]},"Event":{"JSObject":[]},"File":{"Blob":[],"JSObject":[]},"Gamepad":{"JSObject":[]},"MessageEvent":{"Event":[],"JSObject":[]},"MimeType":{"JSObject":[]},"Node":{"EventTarget":[],"JSObject":[]},"Plugin":{"JSObject":[]},"SourceBuffer":{"EventTarget":[],"JSObject":[]},"SpeechGrammar":{"JSObject":[]},"SpeechRecognitionResult":{"JSObject":[]},"StyleSheet":{"JSObject":[]},"TextTrack":{"EventTarget":[],"JSObject":[]},"TextTrackCue":{"EventTarget":[],"JSObject":[]},"Touch":{"JSObject":[]},"HtmlElement":{"Node":[],"EventTarget":[],"JSObject":[]},"AccessibleNodeList":{"JSObject":[]},"AnchorElement":{"Node":[],"EventTarget":[],"JSObject":[]},"AreaElement":{"Node":[],"EventTarget":[],"JSObject":[]},"Blob":{"JSObject":[]},"CharacterData":{"Node":[],"EventTarget":[],"JSObject":[]},"CssPerspective":{"JSObject":[]},"CssStyleDeclaration":{"JSObject":[]},"CssStyleValue":{"JSObject":[]},"CssTransformComponent":{"JSObject":[]},"CssTransformValue":{"JSObject":[]},"CssUnparsedValue":{"JSObject":[]},"DataTransferItemList":{"JSObject":[]},"DedicatedWorkerGlobalScope":{"EventTarget":[],"JSObject":[]},"DomException":{"JSObject":[]},"DomRectList":{"ListBase":["Rectangle<num>"],"ImmutableListMixin":["Rectangle<num>"],"List":["Rectangle<num>"],"JavaScriptIndexingBehavior":["Rectangle<num>"],"JSObject":[],"Iterable":["Rectangle<num>"],"JSIndexable":["Rectangle<num>"],"ImmutableListMixin.E":"Rectangle<num>","ListBase.E":"Rectangle<num>"},"DomRectReadOnly":{"Rectangle":["num"],"JSObject":[]},"DomStringList":{"ListBase":["String"],"ImmutableListMixin":["String"],"List":["String"],"JavaScriptIndexingBehavior":["String"],"JSObject":[],"Iterable":["String"],"JSIndexable":["String"],"ImmutableListMixin.E":"String","ListBase.E":"String"},"DomTokenList":{"JSObject":[]},"Element":{"Node":[],"EventTarget":[],"JSObject":[]},"EventTarget":{"JSObject":[]},"FileList":{"ListBase":["File"],"ImmutableListMixin":["File"],"List":["File"],"JavaScriptIndexingBehavior":["File"],"JSObject":[],"Iterable":["File"],"JSIndexable":["File"],"ImmutableListMixin.E":"File","ListBase.E":"File"},"FileWriter":{"EventTarget":[],"JSObject":[]},"FormElement":{"Node":[],"EventTarget":[],"JSObject":[]},"History":{"JSObject":[]},"HtmlCollection":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"ImageData":{"JSObject":[]},"Location":{"JSObject":[]},"MediaList":{"JSObject":[]},"MessagePort":{"EventTarget":[],"JSObject":[]},"MidiInputMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"MidiOutputMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"MimeTypeArray":{"ListBase":["MimeType"],"ImmutableListMixin":["MimeType"],"List":["MimeType"],"JavaScriptIndexingBehavior":["MimeType"],"JSObject":[],"Iterable":["MimeType"],"JSIndexable":["MimeType"],"ImmutableListMixin.E":"MimeType","ListBase.E":"MimeType"},"NodeList":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"PluginArray":{"ListBase":["Plugin"],"ImmutableListMixin":["Plugin"],"List":["Plugin"],"JavaScriptIndexingBehavior":["Plugin"],"JSObject":[],"Iterable":["Plugin"],"JSIndexable":["Plugin"],"ImmutableListMixin.E":"Plugin","ListBase.E":"Plugin"},"RtcStatsReport":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"SelectElement":{"Node":[],"EventTarget":[],"JSObject":[]},"SharedArrayBuffer":{"JSObject":[]},"SourceBufferList":{"ListBase":["SourceBuffer"],"ImmutableListMixin":["SourceBuffer"],"List":["SourceBuffer"],"EventTarget":[],"JavaScriptIndexingBehavior":["SourceBuffer"],"JSObject":[],"Iterable":["SourceBuffer"],"JSIndexable":["SourceBuffer"],"ImmutableListMixin.E":"SourceBuffer","ListBase.E":"SourceBuffer"},"SpeechGrammarList":{"ListBase":["SpeechGrammar"],"ImmutableListMixin":["SpeechGrammar"],"List":["SpeechGrammar"],"JavaScriptIndexingBehavior":["SpeechGrammar"],"JSObject":[],"Iterable":["SpeechGrammar"],"JSIndexable":["SpeechGrammar"],"ImmutableListMixin.E":"SpeechGrammar","ListBase.E":"SpeechGrammar"},"Storage":{"MapBase":["String","String"],"JSObject":[],"Map":["String","String"],"MapBase.K":"String","MapBase.V":"String"},"TextTrackCueList":{"ListBase":["TextTrackCue"],"ImmutableListMixin":["TextTrackCue"],"List":["TextTrackCue"],"JavaScriptIndexingBehavior":["TextTrackCue"],"JSObject":[],"Iterable":["TextTrackCue"],"JSIndexable":["TextTrackCue"],"ImmutableListMixin.E":"TextTrackCue","ListBase.E":"TextTrackCue"},"TextTrackList":{"ListBase":["TextTrack"],"ImmutableListMixin":["TextTrack"],"List":["TextTrack"],"EventTarget":[],"JavaScriptIndexingBehavior":["TextTrack"],"JSObject":[],"Iterable":["TextTrack"],"JSIndexable":["TextTrack"],"ImmutableListMixin.E":"TextTrack","ListBase.E":"TextTrack"},"TimeRanges":{"JSObject":[]},"TouchList":{"ListBase":["Touch"],"ImmutableListMixin":["Touch"],"List":["Touch"],"JavaScriptIndexingBehavior":["Touch"],"JSObject":[],"Iterable":["Touch"],"JSIndexable":["Touch"],"ImmutableListMixin.E":"Touch","ListBase.E":"Touch"},"TrackDefaultList":{"JSObject":[]},"Url":{"JSObject":[]},"VideoTrackList":{"EventTarget":[],"JSObject":[]},"WorkerGlobalScope":{"EventTarget":[],"JSObject":[]},"_CssRuleList":{"ListBase":["CssRule"],"ImmutableListMixin":["CssRule"],"List":["CssRule"],"JavaScriptIndexingBehavior":["CssRule"],"JSObject":[],"Iterable":["CssRule"],"JSIndexable":["CssRule"],"ImmutableListMixin.E":"CssRule","ListBase.E":"CssRule"},"_DomRect":{"Rectangle":["num"],"JSObject":[]},"_GamepadList":{"ListBase":["Gamepad?"],"ImmutableListMixin":["Gamepad?"],"List":["Gamepad?"],"JavaScriptIndexingBehavior":["Gamepad?"],"JSObject":[],"Iterable":["Gamepad?"],"JSIndexable":["Gamepad?"],"ImmutableListMixin.E":"Gamepad?","ListBase.E":"Gamepad?"},"_NamedNodeMap":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"_SpeechRecognitionResultList":{"ListBase":["SpeechRecognitionResult"],"ImmutableListMixin":["SpeechRecognitionResult"],"List":["SpeechRecognitionResult"],"JavaScriptIndexingBehavior":["SpeechRecognitionResult"],"JSObject":[],"Iterable":["SpeechRecognitionResult"],"JSIndexable":["SpeechRecognitionResult"],"ImmutableListMixin.E":"SpeechRecognitionResult","ListBase.E":"SpeechRecognitionResult"},"_StyleSheetList":{"ListBase":["StyleSheet"],"ImmutableListMixin":["StyleSheet"],"List":["StyleSheet"],"JavaScriptIndexingBehavior":["StyleSheet"],"JSObject":[],"Iterable":["StyleSheet"],"JSIndexable":["StyleSheet"],"ImmutableListMixin.E":"StyleSheet","ListBase.E":"StyleSheet"},"_EventStream":{"Stream":["1"]},"Length":{"JSObject":[]},"Number":{"JSObject":[]},"Transform":{"JSObject":[]},"LengthList":{"ListBase":["Length"],"ImmutableListMixin":["Length"],"List":["Length"],"JSObject":[],"Iterable":["Length"],"ImmutableListMixin.E":"Length","ListBase.E":"Length"},"NumberList":{"ListBase":["Number"],"ImmutableListMixin":["Number"],"List":["Number"],"JSObject":[],"Iterable":["Number"],"ImmutableListMixin.E":"Number","ListBase.E":"Number"},"PointList":{"JSObject":[]},"StringList":{"ListBase":["String"],"ImmutableListMixin":["String"],"List":["String"],"JSObject":[],"Iterable":["String"],"ImmutableListMixin.E":"String","ListBase.E":"String"},"TransformList":{"ListBase":["Transform"],"ImmutableListMixin":["Transform"],"List":["Transform"],"JSObject":[],"Iterable":["Transform"],"ImmutableListMixin.E":"Transform","ListBase.E":"Transform"},"Int8List":{"List":["int"],"Iterable":["int"]},"Uint8List":{"List":["int"],"Iterable":["int"]},"Uint8ClampedList":{"List":["int"],"Iterable":["int"]},"Int16List":{"List":["int"],"Iterable":["int"]},"Uint16List":{"List":["int"],"Iterable":["int"]},"Int32List":{"List":["int"],"Iterable":["int"]},"Uint32List":{"List":["int"],"Iterable":["int"]},"Float32List":{"List":["double"],"Iterable":["double"]},"Float64List":{"List":["double"],"Iterable":["double"]},"AudioBuffer":{"JSObject":[]},"AudioParamMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"AudioTrackList":{"EventTarget":[],"JSObject":[]},"BaseAudioContext":{"EventTarget":[],"JSObject":[]},"OfflineAudioContext":{"EventTarget":[],"JSObject":[]},"StreamCipherAsBlockCipher":{"BlockCipher":[]},"KeyParameter":{"CipherParameters":[]},"PaddedBlockCipher":{"BlockCipher":[]},"ParametersWithIV":{"CipherParameters":[]},"KeyGeneratorParameters":{"CipherParameters":[]},"PaddedBlockCipherParameters":{"CipherParameters":[]},"ASN1BitString":{"ASN1Object":[]},"ASN1Integer":{"ASN1Object":[]},"ASN1ObjectIdentifier":{"ASN1Object":[]},"ASN1OctetString":{"ASN1Object":[]},"ASN1Sequence":{"ASN1Object":[]},"RSAPrivateKey":{"RSAAsymmetricKey":[]},"RSAPublicKey":{"RSAAsymmetricKey":[]},"OAEPEncoding":{"AsymmetricBlockCipher":[]},"PKCS1Encoding":{"AsymmetricBlockCipher":[]},"RSAEngine":{"AsymmetricBlockCipher":[]},"AESEngine":{"BlockCipher":[]},"DESedeEngine":{"BlockCipher":[]},"CBCBlockCipher":{"BlockCipher":[]},"CCMBlockCipher":{"BlockCipher":[]},"CFBBlockCipher":{"BlockCipher":[]},"CTRBlockCipher":{"BlockCipher":[]},"ECBBlockCipher":{"BlockCipher":[]},"GCMBlockCipher":{"BlockCipher":[]},"GCTRBlockCipher":{"BlockCipher":[]},"IGEBlockCipher":{"BlockCipher":[]},"OFBBlockCipher":{"BlockCipher":[]},"SICBlockCipher":{"BlockCipher":[]},"RC2Engine":{"BlockCipher":[]},"Blake2bDigest":{"Digest":[]},"CSHAKEDigest":{"Digest":[]},"KeccakDigest":{"Digest":[]},"MD2Digest":{"Digest":[]},"MD4Digest":{"Digest":[]},"MD5Digest":{"Digest":[]},"RIPEMD128Digest":{"Digest":[]},"RIPEMD160Digest":{"Digest":[]},"RIPEMD256Digest":{"Digest":[]},"RIPEMD320Digest":{"Digest":[]},"SHA1Digest":{"Digest":[]},"SHA224Digest":{"Digest":[]},"SHA256Digest":{"Digest":[]},"SHA3Digest":{"Digest":[]},"SHA384Digest":{"Digest":[]},"SHA512Digest":{"Digest":[]},"SHA512tDigest":{"Digest":[]},"SHAKEDigest":{"Digest":[]},"SM3Digest":{"Digest":[]},"TigerDigest":{"Digest":[]},"WhirlpoolDigest":{"Digest":[]},"ECCurve_brainpoolp160r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp160t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp192r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp192t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp224r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp224t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp256r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp256t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp320r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp320t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp384r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp384t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp512r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp512t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_a":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_b":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_c":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_xcha":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_xchb":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v3":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v3":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime256v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp112r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp112r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp128r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp128r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp192k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp192r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp224k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp224r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp256k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp256r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp384r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp521r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECPointBase":{"ECPoint0":[]},"ECDomainParametersImpl":{"ECDomainParameters":[]},"ECCurveBase":{"ECCurve0":[]},"ECPoint":{"ECPointBase":[],"ECPoint0":[]},"ECFieldElement":{"ECFieldElementBase":[]},"ECCurve":{"ECCurveBase":[],"ECCurve0":[]},"_WNafPreCompInfo":{"PreCompInfo":[]},"Pbkdf2Parameters":{"CipherParameters":[]},"RSAKeyGeneratorParameters":{"CipherParameters":[]},"CBCBlockCipherMac":{"Mac":[]},"CMac":{"Mac":[]},"HMac":{"Mac":[]},"Poly1305":{"Mac":[]},"PaddedBlockCipherImpl":{"PaddedBlockCipher":[],"BlockCipher":[]},"ISO7816d4Padding":{"Padding":[]},"PKCS7Padding":{"Padding":[]},"AutoSeedBlockCtrRandom":{"SecureRandom":[]},"BlockCtrRandom":{"SecureRandom":[]},"FortunaRandom":{"SecureRandom":[]},"BaseAEADBlockCipher":{"BlockCipher":[]},"BaseAsymmetricBlockCipher":{"AsymmetricBlockCipher":[]},"BaseBlockCipher":{"BlockCipher":[]},"BaseDigest":{"Digest":[]},"BaseMac":{"Mac":[]},"BasePadding":{"Padding":[]},"BaseStreamCipher":{"StreamCipher":[]},"KeccakEngine":{"Digest":[]},"LongSHA2FamilyDigest":{"Digest":[]},"MD4FamilyDigest":{"Digest":[]},"SecureRandomBase":{"SecureRandom":[]},"DynamicFactoryConfig":{"FactoryConfig":[]},"StaticFactoryConfig":{"FactoryConfig":[]},"ChaCha20Engine":{"StreamCipher":[]},"ChaCha7539Engine":{"StreamCipher":[]},"CTRStreamCipher":{"StreamCipher":[]},"RC4Engine":{"StreamCipher":[]},"Salsa20Engine":{"StreamCipher":[]},"SICStreamCipher":{"StreamCipher":[]}}'));
-  A._Universe_addErasedTypes(init.typeUniverse, JSON.parse('{"EfficientLengthIterable":1,"NativeTypedArray":1,"_SetBase":1,"Converter":2}'));
+  A._Universe_addRules(init.typeUniverse, JSON.parse('{"PlainJavaScriptObject":"LegacyJavaScriptObject","UnknownJavaScriptObject":"LegacyJavaScriptObject","JavaScriptFunction":"LegacyJavaScriptObject","KeyframeEffect":"JavaScriptObject","KeyframeEffectReadOnly":"JavaScriptObject","AnimationEffectReadOnly":"JavaScriptObject","AbortPaymentEvent":"Event","ExtendableEvent":"Event","AudioContext":"BaseAudioContext","AbsoluteOrientationSensor":"EventTarget","OrientationSensor":"EventTarget","Sensor":"EventTarget","MathMLElement":"Element","AudioElement":"HtmlElement","MediaElement":"HtmlElement","HtmlDocument":"Node","Document":"Node","VttCue":"TextTrackCue","ServiceWorkerGlobalScope":"WorkerGlobalScope","CDataSection":"CharacterData","Text":"CharacterData","HtmlFormControlsCollection":"HtmlCollection","CssCharsetRule":"CssRule","CssMatrixComponent":"CssTransformComponent","CssStyleSheet":"StyleSheet","CssurlImageValue":"CssStyleValue","CssImageValue":"CssStyleValue","CssResourceValue":"CssStyleValue","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"Null":[],"TrustedGetRuntimeType":[]},"JavaScriptObject":{"JSObject":[]},"LegacyJavaScriptObject":{"JSObject":[]},"JSArray":{"List":["1"],"EfficientLengthIterable":["1"],"JSObject":[],"Iterable":["1"],"JSIndexable":["1"]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"EfficientLengthIterable":["1"],"JSObject":[],"Iterable":["1"],"JSIndexable":["1"]},"ArrayIterator":{"Iterator":["1"]},"JSNumber":{"double":[],"num":[]},"JSInt":{"double":[],"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"double":[],"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"Pattern":[],"JSIndexable":["@"],"TrustedGetRuntimeType":[]},"_CopyingBytesBuilder":{"BytesBuilder":[]},"LateError":{"Error":[]},"CodeUnits":{"ListBase":["int"],"UnmodifiableListMixin":["int"],"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"],"ListBase.E":"int","UnmodifiableListMixin.E":"int"},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"EfficientLengthIterable":["1"],"Iterable":["1"]},"SubListIterable":{"ListIterable":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"],"ListIterable.E":"1","Iterable.E":"1"},"ListIterator":{"Iterator":["1"]},"MappedIterable":{"Iterable":["2"],"Iterable.E":"2"},"EfficientLengthMappedIterable":{"MappedIterable":["1","2"],"EfficientLengthIterable":["2"],"Iterable":["2"],"Iterable.E":"2"},"MappedIterator":{"Iterator":["2"]},"MappedListIterable":{"ListIterable":["2"],"EfficientLengthIterable":["2"],"Iterable":["2"],"ListIterable.E":"2","Iterable.E":"2"},"WhereIterable":{"Iterable":["1"],"Iterable.E":"1"},"WhereIterator":{"Iterator":["1"]},"EmptyIterable":{"EfficientLengthIterable":["1"],"Iterable":["1"],"Iterable.E":"1"},"EmptyIterator":{"Iterator":["1"]},"UnmodifiableListBase":{"ListBase":["1"],"UnmodifiableListMixin":["1"],"List":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"]},"ReversedListIterable":{"ListIterable":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"],"ListIterable.E":"1","Iterable.E":"1"},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"NullError":{"TypeError":[],"Error":[]},"JsNoSuchMethodError":{"Error":[]},"UnknownJsTypeError":{"Error":[]},"_StackTrace":{"StackTrace":[]},"Closure":{"Function":[]},"Closure0Args":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"RuntimeError":{"Error":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"LinkedHashMap":["1","2"],"Map":["1","2"],"MapBase.K":"1","MapBase.V":"2"},"LinkedHashMapKeysIterable":{"EfficientLengthIterable":["1"],"Iterable":["1"],"Iterable.E":"1"},"LinkedHashMapKeyIterator":{"Iterator":["1"]},"LinkedHashMapEntriesIterable":{"EfficientLengthIterable":["MapEntry<1,2>"],"Iterable":["MapEntry<1,2>"],"Iterable.E":"MapEntry<1,2>"},"LinkedHashMapEntryIterator":{"Iterator":["MapEntry<1,2>"]},"JSSyntaxRegExp":{"RegExp":[],"Pattern":[]},"_MatchImplementation":{"RegExpMatch":[],"Match":[]},"_AllMatchesIterator":{"Iterator":["RegExpMatch"]},"NativeByteBuffer":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedData":{"JSObject":[]},"NativeByteData":{"NativeTypedData":[],"ByteData":[],"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedArray":{"NativeTypedData":[],"JavaScriptIndexingBehavior":["1"],"JSObject":[],"JSIndexable":["1"]},"NativeTypedArrayOfDouble":{"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"EfficientLengthIterable":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"]},"NativeTypedArrayOfInt":{"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"]},"NativeFloat32List":{"NativeTypedArrayOfDouble":[],"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"EfficientLengthIterable":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double","FixedLengthListMixin.E":"double"},"NativeFloat64List":{"NativeTypedArrayOfDouble":[],"ListBase":["double"],"NativeTypedArray":["double"],"List":["double"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["double"],"EfficientLengthIterable":["double"],"JSObject":[],"JSIndexable":["double"],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double","FixedLengthListMixin.E":"double"},"NativeInt16List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeInt32List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeInt8List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeUint16List":{"NativeTypedArrayOfInt":[],"Uint16List":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeUint32List":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeUint8ClampedList":{"NativeTypedArrayOfInt":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"NativeUint8List":{"NativeTypedArrayOfInt":[],"Uint8List":[],"ListBase":["int"],"NativeTypedArray":["int"],"List":["int"],"NativeTypedData":[],"JavaScriptIndexingBehavior":["int"],"EfficientLengthIterable":["int"],"JSObject":[],"JSIndexable":["int"],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int","FixedLengthListMixin.E":"int"},"_Type":{"Type":[]},"_Error":{"Error":[]},"_TypeError":{"TypeError":[],"Error":[]},"AsyncError":{"Error":[]},"_AsyncCompleter":{"_Completer":["1"]},"_Future":{"Future":["1"]},"_Zone":{"Zone":[]},"_RootZone":{"_Zone":[],"Zone":[]},"_LinkedHashSet":{"SetBase":["1"],"Set":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"]},"_LinkedHashSetIterator":{"Iterator":["1"]},"ListBase":{"List":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"]},"MapBase":{"Map":["1","2"]},"SetBase":{"Set":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"]},"_SetBase":{"SetBase":["1"],"Set":["1"],"EfficientLengthIterable":["1"],"Iterable":["1"]},"_JsonMap":{"MapBase":["String","@"],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"_JsonMapKeyIterable":{"ListIterable":["String"],"EfficientLengthIterable":["String"],"Iterable":["String"],"ListIterable.E":"String","Iterable.E":"String"},"AsciiCodec":{"Codec":["String","List<int>"],"Codec.S":"String"},"Base64Codec":{"Codec":["List<int>","String"],"Codec.S":"List<int>"},"Encoding":{"Codec":["String","List<int>"]},"JsonUnsupportedObjectError":{"Error":[]},"JsonCyclicError":{"Error":[]},"JsonCodec":{"Codec":["Object?","String"],"Codec.S":"Object?"},"_LineSplitIterable":{"Iterable":["String"],"Iterable.E":"String"},"_LineSplitIterator":{"Iterator":["String"]},"Utf8Codec":{"Codec":["String","List<int>"],"Codec.S":"String"},"double":{"num":[]},"int":{"num":[]},"List":{"EfficientLengthIterable":["1"],"Iterable":["1"]},"RegExpMatch":{"Match":[]},"Set":{"EfficientLengthIterable":["1"],"Iterable":["1"]},"String":{"Pattern":[]},"_BigIntImpl":{"BigInt":[]},"AssertionError":{"Error":[]},"TypeError":{"Error":[]},"ArgumentError":{"Error":[]},"RangeError":{"Error":[]},"IndexError":{"Error":[]},"UnsupportedError":{"Error":[]},"UnimplementedError":{"UnsupportedError":[],"Error":[]},"StateError":{"Error":[]},"ConcurrentModificationError":{"Error":[]},"OutOfMemoryError":{"Error":[]},"StackOverflowError":{"Error":[]},"IntegerDivisionByZeroException":{"UnsupportedError":[],"Error":[]},"_StringStackTrace":{"StackTrace":[]},"StringBuffer":{"StringSink":[]},"CssRule":{"JSObject":[]},"Event":{"JSObject":[]},"File":{"Blob":[],"JSObject":[]},"Gamepad":{"JSObject":[]},"MessageEvent":{"Event":[],"JSObject":[]},"MimeType":{"JSObject":[]},"Node":{"EventTarget":[],"JSObject":[]},"Plugin":{"JSObject":[]},"SourceBuffer":{"EventTarget":[],"JSObject":[]},"SpeechGrammar":{"JSObject":[]},"SpeechRecognitionResult":{"JSObject":[]},"StyleSheet":{"JSObject":[]},"TextTrack":{"EventTarget":[],"JSObject":[]},"TextTrackCue":{"EventTarget":[],"JSObject":[]},"Touch":{"JSObject":[]},"HtmlElement":{"Node":[],"EventTarget":[],"JSObject":[]},"AccessibleNodeList":{"JSObject":[]},"AnchorElement":{"Node":[],"EventTarget":[],"JSObject":[]},"AreaElement":{"Node":[],"EventTarget":[],"JSObject":[]},"Blob":{"JSObject":[]},"CharacterData":{"Node":[],"EventTarget":[],"JSObject":[]},"CssPerspective":{"JSObject":[]},"CssStyleDeclaration":{"JSObject":[]},"CssStyleValue":{"JSObject":[]},"CssTransformComponent":{"JSObject":[]},"CssTransformValue":{"JSObject":[]},"CssUnparsedValue":{"JSObject":[]},"DataTransferItemList":{"JSObject":[]},"DedicatedWorkerGlobalScope":{"EventTarget":[],"JSObject":[]},"DomException":{"JSObject":[]},"DomRectList":{"ListBase":["Rectangle<num>"],"ImmutableListMixin":["Rectangle<num>"],"List":["Rectangle<num>"],"JavaScriptIndexingBehavior":["Rectangle<num>"],"EfficientLengthIterable":["Rectangle<num>"],"JSObject":[],"Iterable":["Rectangle<num>"],"JSIndexable":["Rectangle<num>"],"ImmutableListMixin.E":"Rectangle<num>","ListBase.E":"Rectangle<num>"},"DomRectReadOnly":{"Rectangle":["num"],"JSObject":[]},"DomStringList":{"ListBase":["String"],"ImmutableListMixin":["String"],"List":["String"],"JavaScriptIndexingBehavior":["String"],"EfficientLengthIterable":["String"],"JSObject":[],"Iterable":["String"],"JSIndexable":["String"],"ImmutableListMixin.E":"String","ListBase.E":"String"},"DomTokenList":{"JSObject":[]},"Element":{"Node":[],"EventTarget":[],"JSObject":[]},"EventTarget":{"JSObject":[]},"FileList":{"ListBase":["File"],"ImmutableListMixin":["File"],"List":["File"],"JavaScriptIndexingBehavior":["File"],"EfficientLengthIterable":["File"],"JSObject":[],"Iterable":["File"],"JSIndexable":["File"],"ImmutableListMixin.E":"File","ListBase.E":"File"},"FileWriter":{"EventTarget":[],"JSObject":[]},"FormElement":{"Node":[],"EventTarget":[],"JSObject":[]},"History":{"JSObject":[]},"HtmlCollection":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"EfficientLengthIterable":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"ImageData":{"JSObject":[]},"Location":{"JSObject":[]},"MediaList":{"JSObject":[]},"MessagePort":{"EventTarget":[],"JSObject":[]},"MidiInputMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"MidiOutputMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"MimeTypeArray":{"ListBase":["MimeType"],"ImmutableListMixin":["MimeType"],"List":["MimeType"],"JavaScriptIndexingBehavior":["MimeType"],"EfficientLengthIterable":["MimeType"],"JSObject":[],"Iterable":["MimeType"],"JSIndexable":["MimeType"],"ImmutableListMixin.E":"MimeType","ListBase.E":"MimeType"},"NodeList":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"EfficientLengthIterable":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"PluginArray":{"ListBase":["Plugin"],"ImmutableListMixin":["Plugin"],"List":["Plugin"],"JavaScriptIndexingBehavior":["Plugin"],"EfficientLengthIterable":["Plugin"],"JSObject":[],"Iterable":["Plugin"],"JSIndexable":["Plugin"],"ImmutableListMixin.E":"Plugin","ListBase.E":"Plugin"},"RtcStatsReport":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"SelectElement":{"Node":[],"EventTarget":[],"JSObject":[]},"SharedArrayBuffer":{"JSObject":[]},"SourceBufferList":{"ListBase":["SourceBuffer"],"ImmutableListMixin":["SourceBuffer"],"List":["SourceBuffer"],"EventTarget":[],"JavaScriptIndexingBehavior":["SourceBuffer"],"EfficientLengthIterable":["SourceBuffer"],"JSObject":[],"Iterable":["SourceBuffer"],"JSIndexable":["SourceBuffer"],"ImmutableListMixin.E":"SourceBuffer","ListBase.E":"SourceBuffer"},"SpeechGrammarList":{"ListBase":["SpeechGrammar"],"ImmutableListMixin":["SpeechGrammar"],"List":["SpeechGrammar"],"JavaScriptIndexingBehavior":["SpeechGrammar"],"EfficientLengthIterable":["SpeechGrammar"],"JSObject":[],"Iterable":["SpeechGrammar"],"JSIndexable":["SpeechGrammar"],"ImmutableListMixin.E":"SpeechGrammar","ListBase.E":"SpeechGrammar"},"Storage":{"MapBase":["String","String"],"JSObject":[],"Map":["String","String"],"MapBase.K":"String","MapBase.V":"String"},"TextTrackCueList":{"ListBase":["TextTrackCue"],"ImmutableListMixin":["TextTrackCue"],"List":["TextTrackCue"],"JavaScriptIndexingBehavior":["TextTrackCue"],"EfficientLengthIterable":["TextTrackCue"],"JSObject":[],"Iterable":["TextTrackCue"],"JSIndexable":["TextTrackCue"],"ImmutableListMixin.E":"TextTrackCue","ListBase.E":"TextTrackCue"},"TextTrackList":{"ListBase":["TextTrack"],"ImmutableListMixin":["TextTrack"],"List":["TextTrack"],"EventTarget":[],"JavaScriptIndexingBehavior":["TextTrack"],"EfficientLengthIterable":["TextTrack"],"JSObject":[],"Iterable":["TextTrack"],"JSIndexable":["TextTrack"],"ImmutableListMixin.E":"TextTrack","ListBase.E":"TextTrack"},"TimeRanges":{"JSObject":[]},"TouchList":{"ListBase":["Touch"],"ImmutableListMixin":["Touch"],"List":["Touch"],"JavaScriptIndexingBehavior":["Touch"],"EfficientLengthIterable":["Touch"],"JSObject":[],"Iterable":["Touch"],"JSIndexable":["Touch"],"ImmutableListMixin.E":"Touch","ListBase.E":"Touch"},"TrackDefaultList":{"JSObject":[]},"Url":{"JSObject":[]},"VideoTrackList":{"EventTarget":[],"JSObject":[]},"WorkerGlobalScope":{"EventTarget":[],"JSObject":[]},"_CssRuleList":{"ListBase":["CssRule"],"ImmutableListMixin":["CssRule"],"List":["CssRule"],"JavaScriptIndexingBehavior":["CssRule"],"EfficientLengthIterable":["CssRule"],"JSObject":[],"Iterable":["CssRule"],"JSIndexable":["CssRule"],"ImmutableListMixin.E":"CssRule","ListBase.E":"CssRule"},"_DomRect":{"Rectangle":["num"],"JSObject":[]},"_GamepadList":{"ListBase":["Gamepad?"],"ImmutableListMixin":["Gamepad?"],"List":["Gamepad?"],"JavaScriptIndexingBehavior":["Gamepad?"],"EfficientLengthIterable":["Gamepad?"],"JSObject":[],"Iterable":["Gamepad?"],"JSIndexable":["Gamepad?"],"ImmutableListMixin.E":"Gamepad?","ListBase.E":"Gamepad?"},"_NamedNodeMap":{"ListBase":["Node"],"ImmutableListMixin":["Node"],"List":["Node"],"JavaScriptIndexingBehavior":["Node"],"EfficientLengthIterable":["Node"],"JSObject":[],"Iterable":["Node"],"JSIndexable":["Node"],"ImmutableListMixin.E":"Node","ListBase.E":"Node"},"_SpeechRecognitionResultList":{"ListBase":["SpeechRecognitionResult"],"ImmutableListMixin":["SpeechRecognitionResult"],"List":["SpeechRecognitionResult"],"JavaScriptIndexingBehavior":["SpeechRecognitionResult"],"EfficientLengthIterable":["SpeechRecognitionResult"],"JSObject":[],"Iterable":["SpeechRecognitionResult"],"JSIndexable":["SpeechRecognitionResult"],"ImmutableListMixin.E":"SpeechRecognitionResult","ListBase.E":"SpeechRecognitionResult"},"_StyleSheetList":{"ListBase":["StyleSheet"],"ImmutableListMixin":["StyleSheet"],"List":["StyleSheet"],"JavaScriptIndexingBehavior":["StyleSheet"],"EfficientLengthIterable":["StyleSheet"],"JSObject":[],"Iterable":["StyleSheet"],"JSIndexable":["StyleSheet"],"ImmutableListMixin.E":"StyleSheet","ListBase.E":"StyleSheet"},"_EventStream":{"Stream":["1"]},"FixedSizeListIterator":{"Iterator":["1"]},"Length":{"JSObject":[]},"Number":{"JSObject":[]},"Transform":{"JSObject":[]},"LengthList":{"ListBase":["Length"],"ImmutableListMixin":["Length"],"List":["Length"],"EfficientLengthIterable":["Length"],"JSObject":[],"Iterable":["Length"],"ImmutableListMixin.E":"Length","ListBase.E":"Length"},"NumberList":{"ListBase":["Number"],"ImmutableListMixin":["Number"],"List":["Number"],"EfficientLengthIterable":["Number"],"JSObject":[],"Iterable":["Number"],"ImmutableListMixin.E":"Number","ListBase.E":"Number"},"PointList":{"JSObject":[]},"StringList":{"ListBase":["String"],"ImmutableListMixin":["String"],"List":["String"],"EfficientLengthIterable":["String"],"JSObject":[],"Iterable":["String"],"ImmutableListMixin.E":"String","ListBase.E":"String"},"TransformList":{"ListBase":["Transform"],"ImmutableListMixin":["Transform"],"List":["Transform"],"EfficientLengthIterable":["Transform"],"JSObject":[],"Iterable":["Transform"],"ImmutableListMixin.E":"Transform","ListBase.E":"Transform"},"Int8List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Uint8List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Uint8ClampedList":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Int16List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Uint16List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Int32List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Uint32List":{"List":["int"],"EfficientLengthIterable":["int"],"Iterable":["int"]},"Float32List":{"List":["double"],"EfficientLengthIterable":["double"],"Iterable":["double"]},"Float64List":{"List":["double"],"EfficientLengthIterable":["double"],"Iterable":["double"]},"AudioBuffer":{"JSObject":[]},"AudioParamMap":{"MapBase":["String","@"],"JSObject":[],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"AudioTrackList":{"EventTarget":[],"JSObject":[]},"BaseAudioContext":{"EventTarget":[],"JSObject":[]},"OfflineAudioContext":{"EventTarget":[],"JSObject":[]},"StreamCipherAsBlockCipher":{"BlockCipher":[]},"KeyParameter":{"CipherParameters":[]},"PaddedBlockCipher":{"BlockCipher":[]},"ParametersWithIV":{"CipherParameters":[]},"AsymmetricKeyParameter":{"CipherParameters":[]},"KeyGeneratorParameters":{"CipherParameters":[]},"PaddedBlockCipherParameters":{"CipherParameters":[]},"PrivateKeyParameter":{"AsymmetricKeyParameter":["1"],"CipherParameters":[]},"ASN1BitString":{"ASN1Object":[]},"ASN1BMPString":{"ASN1Object":[]},"ASN1Boolean":{"ASN1Object":[]},"ASN1GeneralizedTime":{"ASN1Object":[]},"ASN1IA5String":{"ASN1Object":[]},"ASN1Integer":{"ASN1Object":[]},"ASN1Null":{"ASN1Object":[]},"ASN1ObjectIdentifier":{"ASN1Object":[]},"ASN1OctetString":{"ASN1Object":[]},"ASN1PrintableString":{"ASN1Object":[]},"ASN1Sequence":{"ASN1Object":[]},"ASN1Set":{"ASN1Object":[]},"ASN1TeletextString":{"ASN1Object":[]},"ASN1UtcTime":{"ASN1Object":[]},"ASN1UTF8String":{"ASN1Object":[]},"RSAPrivateKey":{"RSAAsymmetricKey":[]},"RSAPublicKey":{"RSAAsymmetricKey":[]},"OAEPEncoding":{"AsymmetricBlockCipher":[]},"PKCS1Encoding":{"AsymmetricBlockCipher":[]},"RSAEngine":{"AsymmetricBlockCipher":[]},"AESEngine":{"BlockCipher":[]},"DESedeEngine":{"BlockCipher":[]},"CBCBlockCipher":{"BlockCipher":[]},"CCMBlockCipher":{"BlockCipher":[]},"CFBBlockCipher":{"BlockCipher":[]},"CTRBlockCipher":{"BlockCipher":[]},"ECBBlockCipher":{"BlockCipher":[]},"GCMBlockCipher":{"BlockCipher":[]},"GCTRBlockCipher":{"BlockCipher":[]},"IGEBlockCipher":{"BlockCipher":[]},"OFBBlockCipher":{"BlockCipher":[]},"SICBlockCipher":{"BlockCipher":[]},"RC2Engine":{"BlockCipher":[]},"Blake2bDigest":{"Digest":[]},"CSHAKEDigest":{"Digest":[]},"KeccakDigest":{"Digest":[]},"MD2Digest":{"Digest":[]},"MD4Digest":{"Digest":[]},"MD5Digest":{"Digest":[]},"RIPEMD128Digest":{"Digest":[]},"RIPEMD160Digest":{"Digest":[]},"RIPEMD256Digest":{"Digest":[]},"RIPEMD320Digest":{"Digest":[]},"SHA1Digest":{"Digest":[]},"SHA224Digest":{"Digest":[]},"SHA256Digest":{"Digest":[]},"SHA3Digest":{"Digest":[]},"SHA384Digest":{"Digest":[]},"SHA512Digest":{"Digest":[]},"SHA512tDigest":{"Digest":[]},"SHAKEDigest":{"Digest":[]},"SM3Digest":{"Digest":[]},"TigerDigest":{"Digest":[]},"WhirlpoolDigest":{"Digest":[]},"ECCurve_brainpoolp160r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp160t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp192r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp192t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp224r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp224t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp256r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp256t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp320r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp320t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp384r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp384t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp512r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_brainpoolp512t1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_a":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_b":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_c":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_xcha":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_gostr3410_2001_cryptopro_xchb":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime192v3":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime239v3":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_prime256v1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp112r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp112r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp128r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp128r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp160r2":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp192k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp192r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp224k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp224r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp256k1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp256r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp384r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECCurve_secp521r1":{"ECDomainParametersImpl":[],"ECDomainParameters":[]},"ECPointBase":{"ECPoint0":[]},"ECDomainParametersImpl":{"ECDomainParameters":[]},"ECCurveBase":{"ECCurve0":[]},"ECPoint":{"ECPointBase":[],"ECPoint0":[]},"ECFieldElement":{"ECFieldElementBase":[]},"ECCurve":{"ECCurveBase":[],"ECCurve0":[]},"_WNafPreCompInfo":{"PreCompInfo":[]},"Pbkdf2Parameters":{"CipherParameters":[]},"RSAKeyGeneratorParameters":{"CipherParameters":[]},"CBCBlockCipherMac":{"Mac":[]},"CMac":{"Mac":[]},"HMac":{"Mac":[]},"Poly1305":{"Mac":[]},"PaddedBlockCipherImpl":{"PaddedBlockCipher":[],"BlockCipher":[]},"ISO7816d4Padding":{"Padding":[]},"PKCS7Padding":{"Padding":[]},"AutoSeedBlockCtrRandom":{"SecureRandom":[]},"BlockCtrRandom":{"SecureRandom":[]},"FortunaRandom":{"SecureRandom":[]},"BaseAEADBlockCipher":{"BlockCipher":[]},"BaseAsymmetricBlockCipher":{"AsymmetricBlockCipher":[]},"BaseBlockCipher":{"BlockCipher":[]},"BaseDigest":{"Digest":[]},"BaseMac":{"Mac":[]},"BasePadding":{"Padding":[]},"BaseStreamCipher":{"StreamCipher":[]},"KeccakEngine":{"Digest":[]},"LongSHA2FamilyDigest":{"Digest":[]},"MD4FamilyDigest":{"Digest":[]},"SecureRandomBase":{"SecureRandom":[]},"DynamicFactoryConfig":{"FactoryConfig":[]},"StaticFactoryConfig":{"FactoryConfig":[]},"ChaCha20Engine":{"StreamCipher":[]},"ChaCha7539Engine":{"StreamCipher":[]},"CTRStreamCipher":{"StreamCipher":[]},"RC4Engine":{"StreamCipher":[]},"Salsa20Engine":{"StreamCipher":[]},"SICStreamCipher":{"StreamCipher":[]}}'));
+  A._Universe_addErasedTypes(init.typeUniverse, JSON.parse('{"EfficientLengthIterable":1,"UnmodifiableListBase":1,"NativeTypedArray":1,"_SetBase":1,"Converter":2}'));
   var string$ = {
     x30400000: "04000000000000000000000000000000000000000000000000000000000000000041ece55743711a8c3cbf3783cd08c0ee4d4dc440d4641a8f366e550dfdb3bb67",
     x30400001: "0400000000000000000000000000000000000000000000000000000000000000018d91e471e0989cda27df505a453f2b7635294f2ddf23e3b122acc99c9e9f1e14",
@@ -24792,14 +26791,25 @@
   var type$ = (function rtii() {
     var findType = A.findType;
     return {
+      ASN1BMPString: findType("ASN1BMPString"),
+      ASN1BitString: findType("ASN1BitString"),
+      ASN1IA5String: findType("ASN1IA5String"),
+      ASN1Integer: findType("ASN1Integer"),
+      ASN1OctetString: findType("ASN1OctetString"),
+      ASN1PrintableString: findType("ASN1PrintableString"),
+      ASN1Sequence: findType("ASN1Sequence"),
+      ASN1TeletextString: findType("ASN1TeletextString"),
+      ASN1UTF8String: findType("ASN1UTF8String"),
       AsymmetricBlockCipher: findType("AsymmetricBlockCipher"),
       AsymmetricKeyPair_RSAPublicKey_RSAPrivateKey: findType("AsymmetricKeyPair<RSAPublicKey,RSAPrivateKey>"),
+      AsymmetricKeyParameter_RSAAsymmetricKey: findType("AsymmetricKeyParameter<RSAAsymmetricKey>"),
       AsyncError: findType("AsyncError"),
       Base64Codec: findType("Base64Codec"),
       BigInt: findType("BigInt"),
       Blob: findType("Blob"),
       BlockCipher: findType("BlockCipher"),
       ByteData: findType("ByteData"),
+      CodeUnits: findType("CodeUnits"),
       ConstantStringMap_String_Object: findType("ConstantStringMap<String,Object>"),
       CssRule: findType("CssRule"),
       DedicatedWorkerGlobalScope: findType("DedicatedWorkerGlobalScope"),
@@ -24850,6 +26860,7 @@
       ECFieldElement: findType("ECFieldElement"),
       ECPoint: findType("ECPoint"),
       ECPoint_2: findType("ECPoint0"),
+      EfficientLengthIterable_dynamic: findType("EfficientLengthIterable<@>"),
       Error: findType("Error"),
       Event: findType("Event"),
       File: findType("File"),
@@ -24879,6 +26890,7 @@
       List_int: findType("List<int>"),
       Mac: findType("Mac"),
       MapEntry_String_int: findType("MapEntry<String,int>"),
+      Map_String_dynamic: findType("Map<String,@>"),
       Map_dynamic_dynamic: findType("Map<@,@>"),
       Match: findType("Match"),
       MessageEvent: findType("MessageEvent"),
@@ -24888,6 +26900,7 @@
       NativeTypedArrayOfDouble: findType("NativeTypedArrayOfDouble"),
       NativeTypedArrayOfInt: findType("NativeTypedArrayOfInt"),
       NativeTypedData: findType("NativeTypedData"),
+      NativeUint8List: findType("NativeUint8List"),
       Node: findType("Node"),
       Null: findType("Null"),
       Number: findType("Number"),
@@ -24899,6 +26912,7 @@
       ParametersWithIV_KeyParameter: findType("ParametersWithIV<KeyParameter>"),
       ParametersWithIV_nullable_CipherParameters: findType("ParametersWithIV<CipherParameters?>"),
       Plugin: findType("Plugin"),
+      PrivateKeyParameter_RSAPrivateKey: findType("PrivateKeyParameter<RSAPrivateKey>"),
       Record: findType("Record"),
       Rectangle_dynamic: findType("Rectangle<@>"),
       Rectangle_num: findType("Rectangle<num>"),
@@ -24925,6 +26939,7 @@
       _BigIntImpl: findType("_BigIntImpl"),
       _Future_dynamic: findType("_Future<@>"),
       _Future_int: findType("_Future<int>"),
+      _LineSplitIterable: findType("_LineSplitIterable"),
       bool: findType("bool"),
       bool_Function_Object: findType("bool(Object)"),
       double: findType("double"),
@@ -24938,6 +26953,7 @@
       nullable_Future_Null: findType("Future<Null>?"),
       nullable_Gamepad: findType("Gamepad?"),
       nullable_List_ECPoint: findType("List<ECPoint>?"),
+      nullable_List_dynamic: findType("List<@>?"),
       nullable_List_int: findType("List<int>?"),
       nullable_Object: findType("Object?"),
       nullable_String: findType("String?"),
@@ -24979,6 +26995,9 @@
     B.ASN1EncodingRule_2 = new A.ASN1EncodingRule("ENCODING_BER_CONSTRUCTED");
     B.ASN1EncodingRule_3 = new A.ASN1EncodingRule("ENCODING_BER_PADDED");
     B.ASN1EncodingRule_4 = new A.ASN1EncodingRule("ENCODING_BER_CONSTRUCTED_INDEFINITE_LENGTH");
+    B.AsciiDecoder_false = new A.AsciiDecoder(false);
+    B.C_AsciiCodec = new A.AsciiCodec();
+    B.C_AsciiEncoder = new A.AsciiEncoder();
     B.C_Base64Encoder = new A.Base64Encoder();
     B.C_Base64Codec = new A.Base64Codec();
     B.C_Base64Decoder = new A.Base64Decoder();
@@ -25114,9 +27133,11 @@
     B.C_JsonCodec = new A.JsonCodec();
     B.C_OutOfMemoryError = new A.OutOfMemoryError();
     B.C_SentinelValue = new A.SentinelValue();
+    B.C_Utf8Codec = new A.Utf8Codec();
     B.C_Utf8Encoder = new A.Utf8Encoder();
     B.C__RootZone = new A._RootZone();
     B.C__StringStackTrace = new A._StringStackTrace();
+    B.JsonDecoder_null = new A.JsonDecoder(null);
     B.JsonEncoder_null = new A.JsonEncoder(null);
     B.List_04A = A._setArrayType(makeConstList([82, 9, 106, 213, 48, 54, 165, 56, 191, 64, 163, 158, 129, 243, 215, 251, 124, 227, 57, 130, 155, 47, 255, 135, 52, 142, 67, 68, 196, 222, 233, 203, 84, 123, 148, 50, 166, 194, 35, 61, 238, 76, 149, 11, 66, 250, 195, 78, 8, 46, 161, 102, 40, 217, 36, 178, 118, 91, 162, 73, 109, 139, 209, 37, 114, 248, 246, 100, 134, 104, 152, 22, 212, 164, 92, 204, 93, 101, 182, 146, 108, 112, 72, 80, 253, 237, 185, 218, 94, 21, 70, 87, 167, 141, 157, 132, 144, 216, 171, 0, 140, 188, 211, 10, 247, 228, 88, 5, 184, 179, 69, 6, 208, 44, 30, 143, 202, 63, 15, 2, 193, 175, 189, 3, 1, 19, 138, 107, 58, 145, 17, 65, 79, 103, 220, 234, 151, 242, 207, 206, 240, 180, 230, 115, 150, 172, 116, 34, 231, 173, 53, 133, 226, 249, 55, 232, 28, 117, 223, 110, 71, 241, 26, 113, 29, 41, 197, 137, 111, 183, 98, 14, 170, 24, 190, 27, 252, 86, 62, 75, 198, 210, 121, 32, 154, 219, 192, 254, 120, 205, 90, 244, 31, 221, 168, 51, 136, 7, 199, 49, 177, 18, 16, 89, 39, 128, 236, 95, 96, 81, 127, 169, 25, 181, 74, 13, 45, 229, 122, 159, 147, 201, 156, 239, 160, 224, 59, 77, 174, 42, 245, 176, 200, 235, 187, 60, 131, 83, 153, 97, 23, 43, 4, 126, 186, 119, 214, 38, 225, 105, 20, 99, 85, 33, 12, 125]), type$.JSArray_int);
     B.List_62R = A._setArrayType(makeConstList([1, 2, 4, 8, 16, 32, 64, 128, 27, 54, 108, 216, 171, 77, 154, 47, 94, 188, 99, 198, 151, 53, 106, 212, 179, 125, 250, 239, 197, 145]), type$.JSArray_int);
@@ -25562,6 +27583,7 @@
     _lazyFinal($, "_BigIntImpl__bigInt10000", "$get$_BigIntImpl__bigInt10000", () => A._BigIntImpl__BigIntImpl$_fromInt(10000));
     _lazy($, "_BigIntImpl__parseRE", "$get$_BigIntImpl__parseRE", () => A.RegExp_RegExp("^\\s*([+-]?)((0x[a-f0-9]+)|(\\d+)|([a-z0-9]+))\\s*$", false));
     _lazyFinal($, "_BigIntImpl__bitsForFromDouble", "$get$_BigIntImpl__bitsForFromDouble", () => A.NativeUint8List_NativeUint8List(8));
+    _lazyFinal($, "DateTime__parseFormat", "$get$DateTime__parseFormat", () => A.RegExp_RegExp("^([+-]?\\d{4,6})-?(\\d\\d)-?(\\d\\d)(?:[ T](\\d\\d)(?::?(\\d\\d)(?::?(\\d\\d)(?:[.,](\\d+))?)?)?( ?[zZ]| ?([-+])(\\d\\d)(?::?(\\d\\d))?)?)?$", true));
     _lazyFinal($, "_hashSeed", "$get$_hashSeed", () => A.objectHashCode(B.Type_Object_A4p));
     _lazyFinal($, "Random__secureRandom", "$get$Random__secureRandom", () => {
       var t1 = new A._JSSecureRandom(new DataView(new ArrayBuffer(A._checkLength(8))));
@@ -25819,6 +27841,9 @@
   };
   Function.prototype.call$4 = function(a, b, c, d) {
     return this(a, b, c, d);
+  };
+  Function.prototype.call$1$1 = function(a) {
+    return this(a);
   };
   Function.prototype.call$6 = function(a, b, c, d, e, f) {
     return this(a, b, c, d, e, f);

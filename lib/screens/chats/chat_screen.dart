@@ -1,8 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../services/chat_service.dart';
 import '../../utils/crypto_utils.dart';
+import '../../utils/web_workers/worker_bridge_stub.dart'
+    if (dart.library.html) '../../utils/web_workers/worker_bridge.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final int chatId;
@@ -26,7 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _storage = const FlutterSecureStorage();
   final _chatService = ChatService();
 
-  List<_Message> _messages = [];
+  List<Message> _messages = [];
   String? _currentUserEmail;
   int? _currentUserId;
   String? _privateKey;
@@ -49,14 +57,53 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    final messages = await _chatService.fetchMessages(widget.chatId);
-    final decryptedMessages = await _decryptMessages(messages, privKey);
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = 'decrypted_chat_${widget.chatId}';
+
+    List<Message> messages;
+
+    if (prefs.containsKey(cacheKey)) {
+      // Загрузка из кэша
+      try {
+        final cachedJson = prefs.getString(cacheKey)!;
+        final cachedList = jsonDecode(cachedJson) as List;
+        messages = cachedList.map((e) => Message(
+          fromUserId: e['from_user_id'],
+          content: e['content'],
+          timestamp: DateTime.parse(e['timestamp']),
+        )).toList();
+      } catch (e) {
+        // Кэш повреждён — fallback на расшифровку
+        final fetched = await _chatService.fetchMessages(widget.chatId);
+        messages = await _decryptMessages(fetched, privKey);
+
+        final toCache = messages.map((m) => {
+          'from_user_id': m.fromUserId,
+          'content': m.content,
+          'timestamp': m.timestamp.toIso8601String(),
+        }).toList();
+
+        await prefs.setString(cacheKey, jsonEncode(toCache));
+      }
+    } else {
+      // Кэша нет — расшифровываем
+      final fetched = await _chatService.fetchMessages(widget.chatId);
+      messages = await _decryptMessages(fetched, privKey);
+
+      final toCache = messages.map((m) => {
+        'from_user_id': m.fromUserId,
+        'content': m.content,
+        'timestamp': m.timestamp.toIso8601String(),
+      }).toList();
+
+      await prefs.setString(cacheKey, jsonEncode(toCache));
+    }
 
     setState(() {
       _currentUserEmail = email;
       _currentUserId = userId;
       _privateKey = privKey;
-      _messages = decryptedMessages;
+      _messages = messages;
       _loading = false;
     });
 
@@ -64,20 +111,32 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
   }
 
-  Future<List<_Message>> _decryptMessages(List<Map<String, dynamic>> raw, String privKey) async {
-    return raw.map((msg) {
-      String decrypted;
-      try {
-        decrypted = CryptoUtilsService.decryptMessage(msg['encrypted_data'], privKey);
-      } catch (_) {
-        decrypted = '[🔒 Не удалось расшифровать]';
-      }
-      return _Message(
-        fromUserId: msg['from_user_id'],
-        content: decrypted,
-        timestamp: DateTime.parse(msg['timestamp']),
+
+
+  Future<List<Message>> _decryptMessages(List<Map<String, dynamic>> raw, String privKey) async {
+    if (kIsWeb) {
+      final completer = Completer<List<Message>>();
+      final worker = MessageDecryptWorker(
+        rawMessages: raw,
+        privateKey: privKey,
+        onDecrypted: (result) {
+          final messages = result.map((e) => Message(
+            fromUserId: e['from_user_id'],
+            content: e['content'],
+            timestamp: DateTime.parse(e['timestamp']),
+          )).toList();
+          completer.complete(messages);
+        },
       );
-    }).toList();
+      worker.decrypt();
+      return completer.future;
+    } else {
+        // compute для Android/iOS
+        return await compute(
+          decryptMessagesSync,
+          DecryptMessagesArgs(raw, privKey),
+        );
+      }
   }
 
 
@@ -85,25 +144,37 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty || _privateKey == null) return;
 
-    final others = widget.members.where((u) => u['id'] != _currentUserId).toList();
-
     await _chatService.sendMessage(
       chatId: widget.chatId,
       message: text,
-      receivers: widget.members, // ВСЕ, включая себя
+      receivers: widget.members,
+    );
+
+    final newMsg = Message(
+      fromUserId: _currentUserId!,
+      content: text,
+      timestamp: DateTime.now(),
     );
 
     setState(() {
-      _messages.add(_Message(
-        fromUserId: _currentUserId!,
-        content: text,
-        timestamp: DateTime.now(),
-      ));
+      _messages.add(newMsg);
       _controller.clear();
     });
 
+    // Обновляем кэш уже после setState
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = 'decrypted_chat_${widget.chatId}';
+    final updatedCache = _messages.map((m) => {
+      'from_user_id': m.fromUserId,
+      'content': m.content,
+      'timestamp': m.timestamp.toIso8601String(),
+    }).toList();
+
+    await prefs.setString(cacheKey, jsonEncode(updatedCache));
+
     _scrollToBottom();
   }
+
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -183,12 +254,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class _Message {
+class Message {
   final int fromUserId;
   final String content;
   final DateTime timestamp;
 
-  _Message({
+  Message({
     required this.fromUserId,
     required this.content,
     required this.timestamp,

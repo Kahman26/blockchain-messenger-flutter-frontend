@@ -23,3 +23,21 @@ class DecryptWorker {
     throw UnsupportedError('DecryptWorker is only available on web');
   }
 }
+
+
+class MessageDecryptWorker {
+  final List<Map<String, dynamic>> rawMessages;
+  final String privateKey;
+  final void Function(List<Map<String, dynamic>> result) onDecrypted;
+
+  MessageDecryptWorker({
+    required this.rawMessages,
+    required this.privateKey,
+    required this.onDecrypted,
+  });
+
+  void decrypt() {
+    throw UnsupportedError('MessageDecryptWorker is only supported on Web');
+  }
+}
+

@@ -60,6 +60,7 @@ dependencies:
   permission_handler: ^11.4.0
   bip39_mnemonic: ^3.0.10
   flutter_dotenv: ^5.0.2
+  shared_preferences: ^2.2.2
 
 
 dev_dependencies:
