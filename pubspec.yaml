@@ -61,6 +61,7 @@ dependencies:
   bip39_mnemonic: ^3.0.10
   flutter_dotenv: ^5.0.2
   shared_preferences: ^2.2.2
+  web_socket_channel: ^2.4.0
 
 
 dev_dependencies:

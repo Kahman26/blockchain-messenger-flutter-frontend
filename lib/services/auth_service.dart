@@ -10,7 +10,7 @@ class AuthService {
     webOptions: WebOptions(),
   );
 
-  final String baseUrl = dotenv.env['API_URL'] ?? 'http://localhost:8000';
+  final String baseUrl = 'http://' + (dotenv.env['API_URL'] ?? 'localhost:8000');
 
   Future<bool> login(String email, String password) async {
     try {

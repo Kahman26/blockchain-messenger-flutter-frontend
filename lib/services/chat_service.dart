@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatService {
   final Dio _dio = Dio();
-  final String baseUrl = dotenv.env['API_URL'] ?? 'http://localhost:8000';
+  final String baseUrl = 'http://' + (dotenv.env['API_URL'] ?? 'localhost:8000');
 
   Future<List<dynamic>> fetchChats() async {
     try {

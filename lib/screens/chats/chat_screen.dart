@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/chat_service.dart';
+import '../../services/websocket_service.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/web_workers/worker_bridge_stub.dart'
     if (dart.library.html) '../../utils/web_workers/worker_bridge.dart';
@@ -15,7 +16,7 @@ import '../../utils/web_workers/worker_bridge_stub.dart'
 class ChatScreen extends StatefulWidget {
   final int chatId;
   final String chatName;
-  final List<Map<String, dynamic>> members; // [{id, publicKey, username}]
+  final List<Map<String, dynamic>> members; // [{id, public_key, username, last_seen}]
 
   const ChatScreen({
     super.key,
@@ -34,6 +35,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final _storage = const FlutterSecureStorage();
   final _chatService = ChatService();
 
+  late WebSocketService _wsService;
+  List<Map<String, dynamic>> _liveMessages = [];
+
   List<Message> _messages = [];
   String? _currentUserEmail;
   int? _currentUserId;
@@ -44,7 +48,52 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _wsService = WebSocketService();
+
+    _wsService.onMessage = (data) async {
+      if (data['from_user_id'] == _currentUserId) return;
+
+      final encrypted = data['payload'];
+      final decrypted = CryptoUtilsService.decryptMessage(encrypted, _privateKey!);
+
+      final newMsg = Message(
+        fromUserId: data['from_user_id'],
+        content: decrypted,
+        timestamp: DateTime.now(),
+      );
+
+      if (mounted) {
+        setState(() {
+          _liveMessages.add({
+            'from_user_id': data['from_user_id'],
+            'payload': decrypted,
+          });
+          _messages.add(newMsg);
+        });
+
+        final prefs = await SharedPreferences.getInstance();
+        final cacheKey = 'decrypted_chat_${widget.chatId}';
+        final updatedCache = _messages.map((m) => {
+          'from_user_id': m.fromUserId,
+          'content': m.content,
+          'timestamp': m.timestamp.toIso8601String(),
+        }).toList();
+
+        await prefs.setString(cacheKey, jsonEncode(updatedCache));
+
+        _scrollToBottom();
+      }
+    };
+
+    _wsService.connect();
+
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    _wsService.disconnect();
+    super.dispose();
   }
 
   Future<void> _initialize() async {
@@ -141,39 +190,63 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
   Future<void> _handleSend() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty || _privateKey == null) return;
+  final text = _controller.text.trim();
+  if (text.isEmpty || _privateKey == null) return;
 
+  final newMsg = Message(
+    fromUserId: _currentUserId!,
+    content: text,
+    timestamp: DateTime.now(),
+  );
+
+  // 1️⃣ Сначала отображаем сообщение и очищаем поле
+  setState(() {
+    _messages.add(newMsg);
+    _controller.clear();
+  });
+
+  _scrollToBottom();
+
+  // 2️⃣ Сохраняем в кэш сразу
+  final prefs = await SharedPreferences.getInstance();
+  final cacheKey = 'decrypted_chat_${widget.chatId}';
+  final updatedCache = _messages.map((m) => {
+    'from_user_id': m.fromUserId,
+    'content': m.content,
+    'timestamp': m.timestamp.toIso8601String(),
+  }).toList();
+  await prefs.setString(cacheKey, jsonEncode(updatedCache));
+
+  // 3️⃣ Отправляем на сервер — асинхронно (не блокирует UI)
+  unawaited(_sendMessageToBackend(text));
+}
+
+Future<void> _sendMessageToBackend(String text) async {
+  try {
     await _chatService.sendMessage(
       chatId: widget.chatId,
       message: text,
       receivers: widget.members,
     );
 
-    final newMsg = Message(
-      fromUserId: _currentUserId!,
-      content: text,
-      timestamp: DateTime.now(),
-    );
+    for (var member in widget.members) {
+      final toUserId = member['id'];
+      final pubKey = member['public_key'];
+      final encrypted = CryptoUtilsService.encryptMessage(text, pubKey);
+      final signature = CryptoUtilsService.signMessage(text, _privateKey!);
 
-    setState(() {
-      _messages.add(newMsg);
-      _controller.clear();
-    });
-
-    // Обновляем кэш уже после setState
-    final prefs = await SharedPreferences.getInstance();
-    final cacheKey = 'decrypted_chat_${widget.chatId}';
-    final updatedCache = _messages.map((m) => {
-      'from_user_id': m.fromUserId,
-      'content': m.content,
-      'timestamp': m.timestamp.toIso8601String(),
-    }).toList();
-
-    await prefs.setString(cacheKey, jsonEncode(updatedCache));
-
-    _scrollToBottom();
+      _wsService.sendMessage({
+        'to_user_id': toUserId,
+        'payload': encrypted,
+        'signature': signature,
+        'chat_id': widget.chatId,
+      });
+    }
+  } catch (e) {
+    print('Ошибка при отправке сообщения: $e');
+    // 🔴 Можно добавить визуальное уведомление или retry
   }
+}
 
 
   void _scrollToBottom() {
