@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import 'chat_screen.dart';
 import '../../utils/secure_storage.dart';
@@ -13,32 +15,32 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  final ChatService _chatService = ChatService();
-  late Future<List<dynamic>> _chatsFuture;
-
-  void _handleLogout() async {
-    final email = await SecureStorage.read('current_email');
-    if (email != null) {
-      await SecureStorage.delete('jwt');
-      await SecureStorage.delete('user_id');
-      await SecureStorage.delete('current_email');
-      await SecureStorage.delete('private_key_$email');
-      await SecureStorage.delete('encrypted_private_key_$email');
-      await SecureStorage.delete('mnemonic_$email');
-    }
-
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
+  late ChatService _chatService;
+  Future<List<dynamic>>? _chatsFuture;
 
   @override
   void initState() {
     super.initState();
-    _chatsFuture = _chatService.fetchChats();
+    _chatService = Provider.of<ChatService>(context, listen: false);
+    _loadChats(); 
+  }
+
+  void _loadChats() {
+    setState(() {
+      _chatsFuture = _chatService.fetchChats();
+    });
+  }
+
+  void _handleLogout() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final success = await authService.logout();
+    if (success && mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -48,26 +50,33 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const Text('Список чатов'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Обновить',
+            onPressed: _loadChats,
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Выйти',
             onPressed: _handleLogout,
           ),
         ],
       ),
-
       body: FutureBuilder<List<dynamic>>(
         future: _chatsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Ошибка загрузки чатов: ${snapshot.error}'),
+            );
+          }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('Нет чатов'));
           }
 
           final chats = snapshot.data!;
-
-          // Сортировка по дате последнего сообщения, если есть поле last_message_timestamp
           chats.sort((a, b) {
             final aDate = DateTime.tryParse(a['last_message_timestamp'] ?? '') ?? DateTime(1970);
             final bDate = DateTime.tryParse(b['last_message_timestamp'] ?? '') ?? DateTime(1970);
@@ -92,9 +101,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 trailing: Text(formattedTime),
                 onTap: () async {
                   final members = await _chatService.fetchChatMembers(chat['chat_id']);
-
                   if (!context.mounted) return;
-
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -105,7 +112,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       ),
                     ),
                   );
-                }
+                },
               );
             },
           );

@@ -1,5 +1,6 @@
 // lib/screens/reset_password_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import 'login_screen.dart';
 
@@ -15,9 +16,15 @@ class ResetPasswordScreen extends StatefulWidget {
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
+  late AuthService _authService;
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
+  }
 
   Future<void> _handleReset() async {
     setState(() {

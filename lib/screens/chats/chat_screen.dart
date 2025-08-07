@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,9 +34,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _storage = const FlutterSecureStorage();
-  final _chatService = ChatService();
 
+  late ChatService _chatService;
   late WebSocketService _wsService;
+  
   List<Map<String, dynamic>> _liveMessages = [];
 
   List<Message> _messages = [];
@@ -48,6 +50,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _chatService = Provider.of<ChatService>(context, listen: false);
+
     _wsService = WebSocketService();
 
     _wsService.onMessage = (data) async {

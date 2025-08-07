@@ -5,21 +5,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class ChatService {
-  final Dio _dio = Dio();
-  final String baseUrl = 'http://' + (dotenv.env['API_URL'] ?? 'localhost:8000');
+  final Dio _dio;
+  final String baseUrl;
+
+  ChatService(this._dio, {required this.baseUrl});
 
   Future<List<dynamic>> fetchChats() async {
     try {
-      final token = await SecureStorage.read('jwt');
-      if (token == null) throw Exception('Token not found');
-
-      final response = await _dio.get(
-        '$baseUrl/chats/',
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-      );
-
+      final response = await _dio.get('/chats/');
       if (response.statusCode == 200) {
         return response.data['chats'];
       } else {
@@ -31,9 +24,10 @@ class ChatService {
     }
   }
 
+
   Future<void> sendMessage({
     required int chatId,
-    required List<Map<String, dynamic>> receivers, // все участники включая себя
+    required List<Map<String, dynamic>> receivers,
     required String message,
   }) async {
     final email = await SecureStorage.read('current_email');
@@ -55,17 +49,15 @@ class ChatService {
       })
       .toList();
 
-    final token = await SecureStorage.read('jwt');
     await _dio.post(
-      '$baseUrl/chats/$chatId/send',
-      data: encryptedMessages, 
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
+      '/chats/$chatId/send',
+      data: encryptedMessages,
     );
   }
 
 
   Future<List<Map<String, dynamic>>> fetchMessages(int chatId) async {
-    final token = await SecureStorage.read('jwt');
+    final token = await SecureStorage.read('access_token');
     final response = await _dio.get(
       '$baseUrl/chats/$chatId/messages',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
@@ -75,7 +67,7 @@ class ChatService {
 
 
   Future<List<Map<String, dynamic>>> fetchChatMembers(int chatId) async {
-    final token = await SecureStorage.read('jwt');
+    final token = await SecureStorage.read('access_token');
     final response = await _dio.get(
       '$baseUrl/chats/$chatId/members',
       options: Options(headers: {'Authorization': 'Bearer $token'}),

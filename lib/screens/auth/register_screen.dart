@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 
@@ -23,10 +24,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  final _authService = AuthService();
+  late AuthService _authService;
 
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
+  }
 
   Future<void> _handleRegister() async {
     setState(() {
@@ -36,14 +43,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final keys = await compute(CryptoUtilsService.generateRsaKeyPairSync, null);
+      final privateKey = keys['private_key']!;
+
       final email = _emailController.text.trim();
 
       final mnemonic = CryptoUtilsService.generateMnemonic();
       final encryptedPrivateKey = await compute(
         encryptPrivateKeySync,
-        EncryptPrivateKeyArgs(keys['private_key']!, mnemonic),
+        EncryptPrivateKeyArgs(privateKey, mnemonic),
       );
 
+      await SecureStorage.write('private_key_$email', privateKey);
       await SecureStorage.write('encrypted_private_key_$email', encryptedPrivateKey);
       await SecureStorage.write('mnemonic_$email', mnemonic);
       await SecureStorage.write('current_email', email);
@@ -89,8 +99,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loading = true);
 
     final worker = KeyGenWorker(onKeysAndEncryptedReady: (keys) async {
+      final privateKey = keys['private_key']!;
       final email = _emailController.text.trim();
 
+      await SecureStorage.write('private_key_$email', privateKey);
       await SecureStorage.write('encrypted_private_key_$email', keys['encrypted']!);
       await SecureStorage.write('mnemonic_$email', keys['mnemonic']!);
       await SecureStorage.write('current_email', email);

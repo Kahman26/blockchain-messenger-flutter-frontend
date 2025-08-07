@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_storage.dart';
@@ -17,11 +18,17 @@ class ConfirmEmailScreen extends StatefulWidget {
 
 class _ConfirmEmailScreenState extends State<ConfirmEmailScreen> {
   final _codeController = TextEditingController();
-  final _authService = AuthService();
+  late AuthService _authService;
   bool _loading = false;
   String? _error;
 
   late String generatedMnemonic;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
+  }
 
   Future<void> _handleConfirm() async {
     setState(() {

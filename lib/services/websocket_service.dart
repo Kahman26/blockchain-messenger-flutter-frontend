@@ -12,7 +12,7 @@ class WebSocketService {
   OnMessageReceived? onMessage;
 
   Future<void> connect() async {
-    final token = await _storage.read(key: 'jwt');
+    final token = await _storage.read(key: 'access_token');
     if (token == null) return;
 
     final apiUrl = dotenv.env['API_URL'] ?? 'localhost:8000';

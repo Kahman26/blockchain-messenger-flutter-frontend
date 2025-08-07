@@ -104,7 +104,12 @@ class _MnemonicRestoreScreenState extends State<MnemonicRestoreScreen> {
       await _storage.write(key: 'private_key_${widget.email}', value: pem);
 
       final jwt = await _storage.read(key: 'jwt_not_confirmed');
-      await _storage.write(key: 'jwt', value: jwt);
+      final refreshToken = await _storage.read(key: 'refresh_token');
+
+      if (jwt != null && refreshToken != null) {
+        await _storage.write(key: 'access_token', value: jwt);
+        await _storage.write(key: 'refresh_token', value: refreshToken);
+      }
 
       await _storage.delete(key: 'encrypted_private_key_${widget.email}');
       await _storage.delete(key: 'jwt_not_confirmed');
